@@ -23,7 +23,7 @@ public class SimpleTcpClientEndpoint<STATE, INPUT> implements Bus<STATE, INPUT>,
         this.stateinputConverter = stateinputConverter;
     }
 
-    public void broadcastFullState(SimState<STATE> simState) {
+    public void sendFullState(SimState<STATE> simState) {
         simpleTcpEndpoint.broadcastFullState(simState);
     }
 

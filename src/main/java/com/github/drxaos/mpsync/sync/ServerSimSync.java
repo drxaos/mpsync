@@ -12,23 +12,18 @@ public class ServerSimSync<STATE, INPUT> extends Thread {
 
     Bus<STATE, INPUT> bus;
 
-    ArrayBlockingQueue<SimInput<INPUT>> inputs = new ArrayBlockingQueue<SimInput<INPUT>>(10);
-
     final int KEEP_FRAMES = 10;
     LinkedList<SimState<STATE>> states = new LinkedList<SimState<STATE>>();
 
     int currentFrame = 0;
     long lastFrameTimestamp = 0;
-    int fullStateFramesInterval = 10;
-    long oneFrameInterval = 100;
+    int fullStateFramesInterval = 100;
+    long oneFrameInterval = 25;
 
     public ServerSimSync(Simulation<STATE, INPUT> simulation, Bus<STATE, INPUT> bus) {
+        super("ServerSimSync");
         this.simulation = simulation;
         this.bus = bus;
-    }
-
-    public void gotInput(INPUT input, int frame) {
-
     }
 
     @Override
@@ -47,7 +42,19 @@ public class ServerSimSync<STATE, INPUT> extends Thread {
                 }
 
                 if (currentFrame % fullStateFramesInterval == 0) {
-                    bus.broadcastFullState(simState);
+                    bus.sendFullState(simState);
+                    continue;
+                }
+
+                while (bus.getFullState() != null) {
+                    // ignore
+                }
+
+                INPUT input = simulation.getInput();
+                if (input != null) {
+                    SimInput<INPUT> simInput = new SimInput<INPUT>(currentFrame, input);
+                    bus.sendInput(simInput);
+                    simulation.input(simInput);
                 }
             }
         }

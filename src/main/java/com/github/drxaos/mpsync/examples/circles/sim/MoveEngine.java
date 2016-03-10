@@ -7,15 +7,26 @@ public class MoveEngine {
     public final double GRAVITY = 1500;
     public final double DRAG = 0.2;
     public final double BOUNCE = 0.9;
-    public final int MAX_SPAWN = 100;
+    public final int MAX_SPAWN = 300;
 
     private ArrayList<Spawn> living = new ArrayList<Spawn>();
 
-    private double timeFraction = 1.0 / 50.0;
+    private double timeFraction = 1.0 / 200.0;
     private ArrayList<Accel> constForces = new ArrayList<Accel>();
 
     public ArrayList<Spawn> getLiving() {
-        return living;
+        ArrayList<Spawn> result = new ArrayList<Spawn>();
+        for (Spawn spawn : new ArrayList<Spawn>(living)) {
+            result.add(new Spawn(spawn));
+        }
+        return result;
+    }
+
+    public void setLiving(ArrayList<Spawn> living) {
+        this.living.clear();
+        for (Spawn spawn : living) {
+            this.living.add(new Spawn(spawn));
+        }
     }
 
     public void init() {

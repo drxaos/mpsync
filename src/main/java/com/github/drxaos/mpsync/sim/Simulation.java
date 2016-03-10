@@ -11,9 +11,9 @@ public interface Simulation<STATE, INPUT> {
 
     void setFullState(STATE state);
 
-    void mergeAndSeek(SimState<STATE> simState, Collection<SimInput<INPUT>> simInputs, int toFrame);
-
     void step();
+
+    INPUT getInput();
 
     void input(SimInput<INPUT> simInput);
 }

@@ -5,12 +5,15 @@ import com.github.drxaos.mpsync.examples.circles.sim.Spawn;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-public class MainWindow {
+public class MainWindow extends Thread implements MouseListener, MouseMotionListener {
     public final int MAX_SPAWN = 30;
     public static final int X = 640;
     public static final int Y = 480;
@@ -27,14 +30,35 @@ public class MainWindow {
 
     CirclesEngine engine;
 
-    public void setEngine(CirclesEngine engine) {
-        this.engine = engine;
+    MouseEvent click;
+
+    public MainWindow() {
+        super("MainWindow");
     }
 
-    public void start() {
+    public MouseEvent getClick() {
+        try {
+            return click;
+        } finally {
+            click = null;
+        }
+    }
+
+    public void setEngine(CirclesEngine engine) {
+        this.engine = engine;
+        engine.setController(this);
+    }
+
+    @Override
+    public synchronized void start() {
         // Initialize some things.
         initializeJFrame();
 
+        super.start();
+    }
+
+    @Override
+    public void run() {
         // Run the animation loop.
         runAnimation();
     }
@@ -127,5 +151,40 @@ public class MainWindow {
         // Objects needed for rendering...
         graphics = null;
         g2d = null;
+
+        c.addMouseListener(this);
+        c.addMouseMotionListener(this);
+    }
+
+    public void setPosition(int x, int y) {
+        f.setLocation(x, y);
+    }
+
+    public void mouseClicked(MouseEvent e) {
+        click = e;
+    }
+
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    public void mouseExited(MouseEvent e) {
+
+    }
+
+
+    public void mouseDragged(MouseEvent e) {
+        click = e;
+    }
+
+    public void mouseMoved(MouseEvent e) {
     }
 }

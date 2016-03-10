@@ -25,7 +25,7 @@ public class SimpleTcpServerEndpoint<STATE, INPUT> implements Bus<STATE, INPUT>,
         this.stateinputConverter = stateinputConverter;
     }
 
-    public void broadcastFullState(SimState<STATE> simState) {
+    public void sendFullState(SimState<STATE> simState) {
         for (SimpleTcpEndpoint<STATE, INPUT> simpleTcpEndpoint : simpleTcpEndpoints) {
             simpleTcpEndpoint.broadcastFullState(simState);
         }
@@ -60,7 +60,7 @@ public class SimpleTcpServerEndpoint<STATE, INPUT> implements Bus<STATE, INPUT>,
     public void start() throws IOException {
         final ServerSocket welcomeSocket = new ServerSocket(port);
 
-        Thread connector = new Thread() {
+        Thread connector = new Thread("SimpleTcpEndpointServer") {
             @Override
             public void run() {
                 while (true) {

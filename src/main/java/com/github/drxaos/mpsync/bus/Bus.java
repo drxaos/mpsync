@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public interface Bus<STATE, INPUT> {
 
-    void broadcastFullState(SimState<STATE> simState);
+    void sendFullState(SimState<STATE> simState);
 
     SimState<STATE> getFullState();
 

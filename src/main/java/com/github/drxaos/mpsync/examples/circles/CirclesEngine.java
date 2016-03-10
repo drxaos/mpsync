@@ -1,55 +1,69 @@
 package com.github.drxaos.mpsync.examples.circles;
 
 import com.github.drxaos.mpsync.examples.circles.sim.MoveEngine;
+import com.github.drxaos.mpsync.examples.circles.ui.MainWindow;
 import com.github.drxaos.mpsync.sim.Simulation;
 import com.github.drxaos.mpsync.sync.SimInput;
-import com.github.drxaos.mpsync.sync.SimState;
 
-import java.util.Collection;
+import java.awt.event.MouseEvent;
 
 public class CirclesEngine implements Simulation<State, Click> {
 
-    MoveEngine moveEngine = new MoveEngine();
+    final MoveEngine moveEngine = new MoveEngine();
+    private MainWindow controller;
+
+    Click input;
 
     public CirclesEngine() {
         moveEngine.init();
 
         // sample world
-        moveEngine.giveBirth(30, 30, 100, 50, 15);
-        moveEngine.giveBirth(30, 130, 100, -50, 15);
-        moveEngine.giveBirth(30, 230, 100, 50, 15);
+        moveEngine.giveBirth(30, 30, 350, 250, 15);
+        moveEngine.giveBirth(30, 130, 500, -200, 15);
+        moveEngine.giveBirth(30, 230, 200, 550, 15);
     }
 
     public State getFullState() {
-        State state = new State();
-        state.living = moveEngine.getLiving();
-        return state;
+        synchronized (moveEngine) {
+            State state = new State();
+            state.living = moveEngine.getLiving();
+            return state;
+        }
     }
 
     public void setFullState(State state) {
-        moveEngine.getLiving().clear();
-        moveEngine.getLiving().addAll(state.living);
-    }
-
-    public void mergeAndSeek(SimState<State> simState, Collection<SimInput<Click>> simInputs, int toFrame) {
-        setFullState(simState.state);
-        for (int frame = simState.frame; frame < toFrame; frame++) {
-            for (SimInput<Click> simInput : simInputs) {
-                if (simInput.frame == frame) {
-                    input(simInput);
-                }
-            }
-            moveEngine.step();
+        synchronized (moveEngine) {
+            //System.out.println("FULLSTATE: " + state.living.size());
+            moveEngine.setLiving(state.living);
         }
     }
 
     public void step() {
+        if (controller != null) {
+            MouseEvent click = controller.getClick();
+            if (click != null) {
+                input = new Click(click.getX(), click.getY(),
+                        (Math.random() - 0.5) * 300, (Math.random() - 0.5) * 300,
+                        (int) Math.round(Math.random()) * 15 + 10);
+            }
+        }
         moveEngine.step();
     }
 
-    public void input(SimInput<Click> simInput) {
-
+    public Click getInput() {
+        try {
+            return input;
+        } finally {
+            input = null;
+        }
     }
 
+    public void input(SimInput<Click> simInput) {
+        moveEngine.giveBirth(simInput.input.x, simInput.input.y,
+                simInput.input.vx, simInput.input.vy, simInput.input.r);
+    }
 
+    public void setController(MainWindow controller) {
+        this.controller = controller;
+    }
 }

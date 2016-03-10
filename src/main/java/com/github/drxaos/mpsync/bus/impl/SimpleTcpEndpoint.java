@@ -66,7 +66,7 @@ public class SimpleTcpEndpoint<STATE, INPUT> {
         outToServer = new DataOutputStream(socket.getOutputStream());
         inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-        reader = new Thread() {
+        reader = new Thread("SimpleTcpEndpointReader") {
             @Override
             public void run() {
                 try {
@@ -87,7 +87,7 @@ public class SimpleTcpEndpoint<STATE, INPUT> {
             }
         };
 
-        writer = new Thread() {
+        writer = new Thread("SimpleTcpEndpointWriter") {
             @Override
             public void run() {
                 try {

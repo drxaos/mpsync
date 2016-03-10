@@ -30,12 +30,16 @@ public class CirclesConverter implements Converter<State, Click> {
     public SimState<State> deserializeState(byte[] data) {
         Type type = new TypeToken<SimState<State>>() {
         }.getType();
-        return gson.fromJson(new String(data).substring(1), type);
+
+        SimState<State> result = gson.fromJson(new String(data).substring(1), type);
+        return result;
     }
 
     public SimInput<Click> deserializeInput(byte[] data) {
         Type type = new TypeToken<SimInput<Click>>() {
         }.getType();
-        return gson.fromJson(new String(data).substring(1), type);
+
+        SimInput<Click> result = gson.fromJson(new String(data).substring(1), type);
+        return result;
     }
 }
