@@ -1,11 +1,8 @@
 package com.github.drxaos.mpsync.sim;
 
 import com.github.drxaos.mpsync.sync.SimInput;
-import com.github.drxaos.mpsync.sync.SimState;
 
-import java.util.Collection;
-
-public interface Simulation<STATE, INPUT> {
+public interface Simulation<STATE, INPUT, INFO> {
 
     STATE getFullState();
 
@@ -14,6 +11,8 @@ public interface Simulation<STATE, INPUT> {
     void step();
 
     INPUT getInput();
+
+    INFO getInfo();
 
     void input(SimInput<INPUT> simInput);
 }

@@ -15,11 +15,11 @@ public class Test {
             @Override
             public void run() {
                 try {
-                    SimpleTcpServerEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click> serverEndpoint = new SimpleTcpServerEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click>(5001, new CirclesConverter());
+                    SimpleTcpServerEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo> serverEndpoint = new SimpleTcpServerEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo>(5001, new CirclesConverter());
                     serverEndpoint.start();
 
                     CirclesEngine engine = new CirclesEngine();
-                    ServerSimSync<com.github.drxaos.mpsync.examples.circles.State, Click> sync = new ServerSimSync<com.github.drxaos.mpsync.examples.circles.State, Click>(engine, serverEndpoint);
+                    ServerSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo> sync = new ServerSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo>(engine, serverEndpoint);
                     sync.start();
 
                     MainWindow ui = new MainWindow();
@@ -40,11 +40,11 @@ public class Test {
             @Override
             public void run() {
                 try {
-                    SimpleTcpClientEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click> clientEndpoint = new SimpleTcpClientEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click>("localhost", 5001, new CirclesConverter());
+                    SimpleTcpClientEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo> clientEndpoint = new SimpleTcpClientEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo>("localhost", 5001, new CirclesConverter());
                     clientEndpoint.start();
 
                     CirclesEngine engine = new CirclesEngine();
-                    ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click> sync = new ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click>(engine, clientEndpoint);
+                    ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo> sync = new ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo>(engine, clientEndpoint);
                     sync.start();
 
                     MainWindow ui = new MainWindow();
@@ -63,11 +63,11 @@ public class Test {
             @Override
             public void run() {
                 try {
-                    SimpleTcpClientEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click> clientEndpoint = new SimpleTcpClientEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click>("localhost", 5001, new CirclesConverter());
+                    SimpleTcpClientEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo> clientEndpoint = new SimpleTcpClientEndpoint<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo>("localhost", 5001, new CirclesConverter());
                     clientEndpoint.start();
 
                     CirclesEngine engine = new CirclesEngine();
-                    ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click> sync = new ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click>(engine, clientEndpoint);
+                    ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo> sync = new ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo>(engine, clientEndpoint);
                     sync.start();
 
                     MainWindow ui = new MainWindow();

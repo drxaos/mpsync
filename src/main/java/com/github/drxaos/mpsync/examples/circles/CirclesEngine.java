@@ -7,7 +7,7 @@ import com.github.drxaos.mpsync.sync.SimInput;
 
 import java.awt.event.MouseEvent;
 
-public class CirclesEngine implements Simulation<State, Click> {
+public class CirclesEngine implements Simulation<State, Click, CirclesInfo> {
 
     final MoveEngine moveEngine = new MoveEngine();
     private MainWindow controller;
@@ -56,6 +56,10 @@ public class CirclesEngine implements Simulation<State, Click> {
         } finally {
             input = null;
         }
+    }
+
+    public CirclesInfo getInfo() {
+        return new CirclesInfo();
     }
 
     public void input(SimInput<Click> simInput) {

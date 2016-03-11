@@ -15,11 +15,11 @@ public class Launcher {
 
         if (isServer) {
 
-            SimpleTcpServerEndpoint<State, Click> serverEndpoint = new SimpleTcpServerEndpoint<State, Click>(5001, new CirclesConverter());
+            SimpleTcpServerEndpoint<State, Click, CirclesInfo> serverEndpoint = new SimpleTcpServerEndpoint<State, Click, CirclesInfo>(5001, new CirclesConverter());
             serverEndpoint.start();
 
             CirclesEngine engine = new CirclesEngine();
-            ServerSimSync<State, Click> sync = new ServerSimSync<State, Click>(engine, serverEndpoint);
+            ServerSimSync<State, Click, CirclesInfo> sync = new ServerSimSync<State, Click, CirclesInfo>(engine, serverEndpoint);
             sync.start();
 
             MainWindow ui = new MainWindow();
@@ -28,11 +28,11 @@ public class Launcher {
 
         } else {
 
-            SimpleTcpClientEndpoint<State, Click> clientEndpoint = new SimpleTcpClientEndpoint<State, Click>("localhost", 5001, new CirclesConverter());
+            SimpleTcpClientEndpoint<State, Click, CirclesInfo> clientEndpoint = new SimpleTcpClientEndpoint<State, Click, CirclesInfo>("localhost", 5001, new CirclesConverter());
             clientEndpoint.start();
 
             CirclesEngine engine = new CirclesEngine();
-            ClientSimSync<State, Click> sync = new ClientSimSync<State, Click>(engine, clientEndpoint);
+            ClientSimSync<State, Click, CirclesInfo> sync = new ClientSimSync<State, Click, CirclesInfo>(engine, clientEndpoint);
             sync.start();
 
             MainWindow ui = new MainWindow();

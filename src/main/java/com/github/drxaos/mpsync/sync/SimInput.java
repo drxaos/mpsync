@@ -3,10 +3,11 @@ package com.github.drxaos.mpsync.sync;
 import java.io.Serializable;
 
 public class SimInput<INPUT> implements Serializable {
-    private int idCounter = 1;
+    private static int idCounter = 1;
 
     public int id;
     public int frame;
+    public int client = 0;
     public INPUT input;
     public long timestamp;
 
@@ -20,6 +21,25 @@ public class SimInput<INPUT> implements Serializable {
         this.frame = frame;
         this.input = input;
         this.timestamp = System.currentTimeMillis();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SimInput<?> simInput = (SimInput<?>) o;
+
+        if (id != simInput.id) return false;
+        return client == simInput.client;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id;
+        result = 31 * result + client;
+        return result;
     }
 
     @Override

@@ -2,22 +2,23 @@ package com.github.drxaos.mpsync.bus.impl;
 
 import com.github.drxaos.mpsync.bus.Bus;
 import com.github.drxaos.mpsync.bus.Converter;
+import com.github.drxaos.mpsync.bus.ServerInfo;
 import com.github.drxaos.mpsync.sync.SimInput;
 import com.github.drxaos.mpsync.sync.SimState;
 
 import java.io.IOException;
 import java.net.Socket;
 
-public class SimpleTcpClientEndpoint<STATE, INPUT> implements Bus<STATE, INPUT>, SocketOwner {
+public class SimpleTcpClientEndpoint<STATE, INPUT, INFO> implements Bus<STATE, INPUT, INFO>, SocketOwner {
 
     String host;
     int port;
 
-    SimpleTcpEndpoint<STATE, INPUT> simpleTcpEndpoint;
+    SimpleTcpEndpoint<STATE, INPUT, INFO> simpleTcpEndpoint;
 
-    Converter<STATE, INPUT> stateinputConverter;
+    Converter<STATE, INPUT, INFO> stateinputConverter;
 
-    public SimpleTcpClientEndpoint(String host, int port, Converter<STATE, INPUT> stateinputConverter) {
+    public SimpleTcpClientEndpoint(String host, int port, Converter<STATE, INPUT, INFO> stateinputConverter) {
         this.host = host;
         this.port = port;
         this.stateinputConverter = stateinputConverter;
@@ -39,8 +40,16 @@ public class SimpleTcpClientEndpoint<STATE, INPUT> implements Bus<STATE, INPUT>,
         return simpleTcpEndpoint.getInput();
     }
 
+    public void setServerInfo(ServerInfo<INFO> serverInfo) {
+        simpleTcpEndpoint.sendServerInfo(serverInfo);
+    }
+
+    public ServerInfo<INFO> getServerInfo() {
+        return simpleTcpEndpoint.getServerInfo();
+    }
+
     public void start() throws IOException {
-        simpleTcpEndpoint = new SimpleTcpEndpoint<STATE, INPUT>(stateinputConverter);
+        simpleTcpEndpoint = new SimpleTcpEndpoint<STATE, INPUT, INFO>(stateinputConverter, null);
         simpleTcpEndpoint.start(new Socket(host, port), this);
     }
 

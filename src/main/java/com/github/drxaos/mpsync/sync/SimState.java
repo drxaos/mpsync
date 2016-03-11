@@ -18,6 +18,22 @@ public class SimState<STATE> implements Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SimState<?> simState = (SimState<?>) o;
+
+        return frame == simState.frame;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return frame;
+    }
+
+    @Override
     public String toString() {
         return "SimState(F:" + frame + ", " + state + ")";
     }

@@ -3,19 +3,21 @@ package com.github.drxaos.mpsync.sync;
 import com.github.drxaos.mpsync.bus.Bus;
 import com.github.drxaos.mpsync.sim.Simulation;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-public class ClientSimSync<STATE, INPUT> extends Thread {
+public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
 
-    Simulation<STATE, INPUT> simulation;
+    Simulation<STATE, INPUT, INFO> simulation;
 
-    Bus<STATE, INPUT> bus;
+    Bus<STATE, INPUT, INFO> bus;
 
-    LinkedList<SimState<STATE>> states = new LinkedList<SimState<STATE>>();
-    LinkedList<SimInput<INPUT>> inputs = new LinkedList<SimInput<INPUT>>();
+    HashSet<SimState<STATE>> states = new HashSet<SimState<STATE>>();
+    HashSet<SimInput<INPUT>> inputs = new HashSet<SimInput<INPUT>>();
+    HashSet<SimState<STATE>> futureStates = new HashSet<SimState<STATE>>();
 
-    final int ADJUST_INTERVALS = 1;
+    final int ADJUST_INTERVALS = 3;
     final int KEEP_ADJUST_INTERVALS = 20;
     int currentFrame = 0;
     int lastSyncFrame = 0;
@@ -25,26 +27,33 @@ public class ClientSimSync<STATE, INPUT> extends Thread {
     LinkedList<Long> syncIntervals = new LinkedList<Long>();
     long oneFrameInterval = Long.MAX_VALUE;
 
-    public ClientSimSync(Simulation<STATE, INPUT> simulation, Bus<STATE, INPUT> bus) {
+    public ClientSimSync(Simulation<STATE, INPUT, INFO> simulation, Bus<STATE, INPUT, INFO> bus) {
         super("ClientSimSync");
         this.simulation = simulation;
         this.bus = bus;
     }
 
     public void gotFullState(SimState<STATE> simState, boolean adjust) {
+        System.out.println("FULLSTATE: " + currentFrame + " -> " + simState.frame);
 
-        // merge
-        simulation.setFullState(simState.state);
-        currentFrame = simState.frame;
+        int lag = simState.frame - currentFrame;
+        if (adjust && lag < fullStateFramesInterval / 10) {
+            futureStates.add(simState);
+        } else {
+            lag = 0;
 
-        for (Iterator<SimState<STATE>> iterator = states.iterator(); iterator.hasNext(); ) {
-            SimState<STATE> next = iterator.next();
-            if (next.frame >= currentFrame) {
-                iterator.remove();
+            // merge
+            simulation.setFullState(simState.state);
+            currentFrame = simState.frame;
+
+            for (Iterator<SimState<STATE>> iterator = states.iterator(); iterator.hasNext(); ) {
+                SimState<STATE> next = iterator.next();
+                if (next.frame >= currentFrame) {
+                    iterator.remove();
+                }
             }
+            states.add(simState);
         }
-        states.add(simState);
-
 
         // adjust speed
         if (adjust) {
@@ -54,22 +63,27 @@ public class ClientSimSync<STATE, INPUT> extends Thread {
                     syncIntervals.remove(0);
                 }
                 long averageTimeInterval = 0;
+                long addCount = 0;
+                long k = 0;
                 for (Long syncInterval : syncIntervals) {
-                    averageTimeInterval += syncInterval;
+                    k++;
+                    averageTimeInterval += syncInterval * k;
+                    addCount += k;
                 }
-                averageTimeInterval = averageTimeInterval / syncIntervals.size();
-                fullStateFramesInterval = simState.frame - lastSyncFrame;
+                averageTimeInterval = averageTimeInterval / addCount;
+                fullStateFramesInterval = simState.frame - lastSyncFrame + lag;
                 oneFrameInterval = averageTimeInterval / fullStateFramesInterval;
             }
             lastSyncTimestamp = simState.timestamp;
             lastSyncFrame = simState.frame;
 
-            //System.out.println("ADJUST: " + oneFrameInterval + "ms * " + fullStateFramesInterval + " frames");
+            System.out.println("ADJUST: " + oneFrameInterval + "ms * " + fullStateFramesInterval + " frames");
         }
     }
 
     @Override
     public void run() {
+        mainLoop:
         while (true) {
             try {
                 Thread.sleep(1);
@@ -100,48 +114,15 @@ public class ClientSimSync<STATE, INPUT> extends Thread {
                 }
             }
 
-            // handle inputs
-            SimInput<INPUT> input = bus.getInput();
+            INPUT input = simulation.getInput();
             if (input != null) {
-                int firstFrame = input.frame;
-                while (input != null) {
-                    if (input.frame < firstFrame) {
-                        firstFrame = input.frame;
-                    }
-                    inputs.add(input);
-                    input = bus.getInput();
-                }
-                // merge
-                int actualFrame = currentFrame;
-                SimState<STATE> simState = findNearestState(firstFrame);
-
-                if (simState == null) {
-                    // wait for next full state
-                    continue;
-                }
-                gotFullState(simState, false);
-                for (SimInput<INPUT> simInput : inputs) {
-                    if (simInput.frame == currentFrame) {
-                        simulation.input(simInput);
-                    }
-                }
-
-                // seek
-                while (currentFrame < actualFrame) {
-                    simulation.step();
-                    currentFrame++;
-                    states.add(new SimState<STATE>(currentFrame, simulation.getFullState()));
-                    while (states.size() > fullStateFramesInterval * 4) {
-                        states.remove(0);
-                    }
-
-                    for (SimInput<INPUT> simInput : inputs) {
-                        if (simInput.frame == currentFrame) {
-                            simulation.input(simInput);
-                        }
-                    }
-                }
+                SimInput<INPUT> simInput = new SimInput<INPUT>(currentFrame, input);
+                bus.sendInput(simInput);
+                simulation.input(simInput);
+                inputs.add(simInput);
             }
+
+            handleIncomingInputs();
 
             if (currentFrame - lastSyncFrame > fullStateFramesInterval * 4) {
                 // no server activity - hang
@@ -150,12 +131,80 @@ public class ClientSimSync<STATE, INPUT> extends Thread {
 
             // continue prediction
             if (lastFrameTimestamp + oneFrameInterval < System.currentTimeMillis()) {
+
+                if (futureStates.contains(new SimState<STATE>(currentFrame + 1, null))) {
+                    // haz state
+                    for (Iterator<SimState<STATE>> iterator = futureStates.iterator(); iterator.hasNext(); ) {
+                        SimState<STATE> futureState = iterator.next();
+                        if (futureState.frame == currentFrame + 1) {
+                            gotFullState(futureState, false);
+                            for (SimInput<INPUT> simInput : inputs) {
+                                if (simInput.frame == currentFrame) {
+                                    simulation.input(simInput);
+                                }
+                            }
+                            iterator.remove();
+                            continue mainLoop;
+                        }
+                    }
+                }
                 simulation.step();
                 currentFrame++;
                 lastFrameTimestamp = System.currentTimeMillis();
                 states.add(new SimState<STATE>(currentFrame, simulation.getFullState()));
-                while (states.size() > fullStateFramesInterval * 4) {
-                    states.remove(0);
+                for (Iterator<SimState<STATE>> iterator = states.iterator(); iterator.hasNext(); ) {
+                    SimState<STATE> next = iterator.next();
+                    if (next.frame < currentFrame - fullStateFramesInterval * 2) {
+                        iterator.remove();
+                    }
+                }
+
+                for (SimInput<INPUT> simInput : inputs) {
+                    if (simInput.frame == currentFrame) {
+                        simulation.input(simInput);
+                    }
+                }
+            }
+        }
+    }
+
+    void handleIncomingInputs() {
+        // handle inputs
+        SimInput<INPUT> input = bus.getInput();
+        if (input != null) {
+            int firstFrame = input.frame;
+            while (input != null) {
+                if (input.frame < firstFrame) {
+                    firstFrame = input.frame;
+                }
+                inputs.add(input);
+                input = bus.getInput();
+            }
+            // merge
+            int actualFrame = currentFrame;
+            SimState<STATE> simState = findNearestState(firstFrame);
+
+            if (simState == null) {
+                // wait for next full state
+                return;
+            }
+            gotFullState(simState, false);
+            for (SimInput<INPUT> simInput : inputs) {
+                if (simInput.frame == currentFrame) {
+                    simulation.input(simInput);
+                }
+            }
+
+            // seek
+            while (currentFrame < actualFrame) {
+                simulation.step();
+                currentFrame++;
+                states.add(new SimState<STATE>(currentFrame, simulation.getFullState()));
+                for (Iterator<SimState<STATE>> iterator = states.iterator(); iterator.hasNext(); ) {
+                    SimState<STATE> next = iterator.next();
+                    if (next.frame < currentFrame - fullStateFramesInterval * 2) {
+                        iterator.remove();
+                    }
                 }
 
                 for (SimInput<INPUT> simInput : inputs) {

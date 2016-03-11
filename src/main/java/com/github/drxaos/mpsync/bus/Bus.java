@@ -5,7 +5,7 @@ import com.github.drxaos.mpsync.sync.SimState;
 
 import java.io.IOException;
 
-public interface Bus<STATE, INPUT> {
+public interface Bus<STATE, INPUT, INFO> {
 
     void sendFullState(SimState<STATE> simState);
 
@@ -14,6 +14,10 @@ public interface Bus<STATE, INPUT> {
     void sendInput(SimInput<INPUT> simInput);
 
     SimInput<INPUT> getInput();
+
+    void setServerInfo(ServerInfo<INFO> serverInfo);
+
+    ServerInfo<INFO> getServerInfo();
 
     void start() throws IOException;
 }

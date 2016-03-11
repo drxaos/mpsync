@@ -1,6 +1,7 @@
 package com.github.drxaos.mpsync.bus.impl;
 
 import com.github.drxaos.mpsync.bus.Converter;
+import com.github.drxaos.mpsync.bus.ServerInfo;
 import com.github.drxaos.mpsync.sync.SimInput;
 import com.github.drxaos.mpsync.sync.SimState;
 
@@ -11,24 +12,31 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class SimpleTcpEndpoint<STATE, INPUT> {
+public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
 
     Socket socket;
 
     DataOutputStream outToServer;
     BufferedReader inFromServer;
 
-    Converter<STATE, INPUT> converter;
+    Converter<STATE, INPUT, INFO> converter;
 
     ConcurrentLinkedQueue<SimState<STATE>> simStatesIn = new ConcurrentLinkedQueue<SimState<STATE>>();
-    ConcurrentLinkedQueue<SimInput<INPUT>> simInputsIn = new ConcurrentLinkedQueue<SimInput<INPUT>>();
     ConcurrentLinkedQueue<SimState<STATE>> simStatesOut = new ConcurrentLinkedQueue<SimState<STATE>>();
+
+    ConcurrentLinkedQueue<SimInput<INPUT>> simInputsIn = new ConcurrentLinkedQueue<SimInput<INPUT>>();
     ConcurrentLinkedQueue<SimInput<INPUT>> simInputsOut = new ConcurrentLinkedQueue<SimInput<INPUT>>();
+
+    ConcurrentLinkedQueue<ServerInfo<INFO>> serverInfosIn = new ConcurrentLinkedQueue<ServerInfo<INFO>>();
+    ConcurrentLinkedQueue<ServerInfo<INFO>> serverInfosOut = new ConcurrentLinkedQueue<ServerInfo<INFO>>();
 
     Thread reader, writer;
 
-    public SimpleTcpEndpoint(Converter<STATE, INPUT> converter) {
+    Integer client;
+
+    public SimpleTcpEndpoint(Converter<STATE, INPUT, INFO> converter, Integer client) {
         this.converter = converter;
+        this.client = client;
     }
 
     public void broadcastFullState(SimState<STATE> simState) {
@@ -45,6 +53,14 @@ public class SimpleTcpEndpoint<STATE, INPUT> {
 
     public SimInput<INPUT> getInput() {
         return simInputsIn.poll();
+    }
+
+    public ServerInfo<INFO> getServerInfo() {
+        return serverInfosIn.poll();
+    }
+
+    public void sendServerInfo(ServerInfo<INFO> serverInfo) {
+        serverInfosOut.add(serverInfo);
     }
 
     public boolean isAlive() {
@@ -75,10 +91,16 @@ public class SimpleTcpEndpoint<STATE, INPUT> {
                         System.out.println("IN: " + new String(data));
                         if (converter.isInput(data)) {
                             SimInput<INPUT> simInput = converter.deserializeInput(data);
+                            if (client != null) { // i'm a server
+                                simInput.client = SimpleTcpEndpoint.this.client;
+                            }
                             simInputsIn.add(simInput);
                         } else if (converter.isState(data)) {
                             SimState<STATE> simState = converter.deserializeState(data);
                             simStatesIn.add(simState);
+                        } else if (converter.isServerInfo(data)) {
+                            ServerInfo<INFO> simState = converter.deserializeServerInfo(data);
+                            serverInfosIn.add(simState);
                         }
                     }
                 } catch (Exception e) {
@@ -107,6 +129,14 @@ public class SimpleTcpEndpoint<STATE, INPUT> {
                             outToServer.write(data);
                             outToServer.writeBytes("\n");
                             simState = simStatesOut.poll();
+                        }
+                        ServerInfo serverInfo = serverInfosOut.poll();
+                        while (serverInfo != null) {
+                            byte[] data = converter.serializeServerInfo(serverInfo);
+                            System.out.println("OUT: " + new String(data));
+                            outToServer.write(data);
+                            outToServer.writeBytes("\n");
+                            serverInfo = serverInfosOut.poll();
                         }
                         Thread.sleep(1);
                     }
