@@ -34,6 +34,14 @@ public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
 
     Integer client;
 
+    public boolean debug = false;
+
+    private void debug(String message) {
+        if (debug) {
+            System.out.println(message);
+        }
+    }
+
     public SimpleTcpEndpoint(Converter<STATE, INPUT, INFO> converter, Integer client) {
         this.converter = converter;
         this.client = client;
@@ -88,7 +96,7 @@ public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
                 try {
                     while (true) {
                         byte[] data = inFromServer.readLine().getBytes();
-                        System.out.println("IN: " + new String(data));
+                        debug("IN(" + client + "): " + new String(data));
                         if (converter.isInput(data)) {
                             SimInput<INPUT> simInput = converter.deserializeInput(data);
                             if (client != null) { // i'm a server
@@ -117,7 +125,7 @@ public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
                         SimInput<INPUT> simInput = simInputsOut.poll();
                         while (simInput != null) {
                             byte[] data = converter.serializeSimInput(simInput);
-                            System.out.println("OUT: " + new String(data));
+                            debug("OUT(" + client + "): " + new String(data));
                             outToServer.write(data);
                             outToServer.writeBytes("\n");
                             simInput = simInputsOut.poll();
@@ -125,7 +133,7 @@ public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
                         SimState<STATE> simState = simStatesOut.poll();
                         while (simState != null) {
                             byte[] data = converter.serializeSimState(simState);
-                            System.out.println("OUT: " + new String(data));
+                            debug("OUT(" + client + "): " + new String(data));
                             outToServer.write(data);
                             outToServer.writeBytes("\n");
                             simState = simStatesOut.poll();
@@ -133,7 +141,7 @@ public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
                         ServerInfo serverInfo = serverInfosOut.poll();
                         while (serverInfo != null) {
                             byte[] data = converter.serializeServerInfo(serverInfo);
-                            System.out.println("OUT: " + new String(data));
+                            debug("OUT(" + client + "): " + new String(data));
                             outToServer.write(data);
                             outToServer.writeBytes("\n");
                             serverInfo = serverInfosOut.poll();

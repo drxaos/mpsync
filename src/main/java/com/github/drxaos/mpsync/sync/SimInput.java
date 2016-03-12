@@ -5,8 +5,8 @@ import java.io.Serializable;
 public class SimInput<INPUT> implements Serializable {
     private static int idCounter = 1;
 
-    public int id;
-    public int frame;
+    public long id;
+    public long frame;
     public int client = 0;
     public INPUT input;
     public long timestamp;
@@ -16,7 +16,7 @@ public class SimInput<INPUT> implements Serializable {
         this.timestamp = System.currentTimeMillis();
     }
 
-    public SimInput(int frame, INPUT input) {
+    public SimInput(long frame, INPUT input) {
         this.id = idCounter++;
         this.frame = frame;
         this.input = input;
@@ -37,7 +37,7 @@ public class SimInput<INPUT> implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = id;
+        int result = (int) id;
         result = 31 * result + client;
         return result;
     }

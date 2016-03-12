@@ -5,8 +5,8 @@ import java.io.Serializable;
 public class ServerInfo<INFO> implements Serializable {
 
     public int clientId;
-    public int fullStateFramesInterval;
-    public long oneFrameInterval;
+    public int keyFrameInterval;
+    public int keyFrameIntervalTime;
     public INFO info;
 
     public ServerInfo() {
@@ -14,14 +14,14 @@ public class ServerInfo<INFO> implements Serializable {
 
     public ServerInfo(ServerInfo<INFO> serverInfo, int clientId) {
         this.clientId = clientId;
-        this.fullStateFramesInterval = serverInfo.fullStateFramesInterval;
-        this.oneFrameInterval = serverInfo.oneFrameInterval;
+        this.keyFrameInterval = serverInfo.keyFrameInterval;
+        this.keyFrameIntervalTime = serverInfo.keyFrameIntervalTime;
         this.info = serverInfo.info;
     }
 
-    public ServerInfo(int fullStateFramesInterval, long oneFrameInterval, INFO info) {
-        this.fullStateFramesInterval = fullStateFramesInterval;
-        this.oneFrameInterval = oneFrameInterval;
+    public ServerInfo(int keyFrameInterval, int keyFrameIntervalTime, INFO info) {
+        this.keyFrameInterval = keyFrameInterval;
+        this.keyFrameIntervalTime = keyFrameIntervalTime;
         this.info = info;
     }
 }

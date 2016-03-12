@@ -3,7 +3,7 @@ package com.github.drxaos.mpsync.sync;
 import java.io.Serializable;
 
 public class SimState<STATE> implements Serializable {
-    public int frame;
+    public long frame;
     public STATE state;
     public long timestamp;
 
@@ -11,7 +11,7 @@ public class SimState<STATE> implements Serializable {
         this.timestamp = System.currentTimeMillis();
     }
 
-    public SimState(int frame, STATE state) {
+    public SimState(long frame, STATE state) {
         this.frame = frame;
         this.state = state;
         this.timestamp = System.currentTimeMillis();
@@ -30,7 +30,7 @@ public class SimState<STATE> implements Serializable {
 
     @Override
     public int hashCode() {
-        return frame;
+        return (int) frame;
     }
 
     @Override

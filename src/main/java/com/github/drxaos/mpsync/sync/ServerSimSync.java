@@ -17,27 +17,37 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
     HashSet<SimState<STATE>> states = new HashSet<SimState<STATE>>();
     HashSet<SimInput<INPUT>> inputs = new HashSet<SimInput<INPUT>>();
 
-    int currentFrame = 0;
+    long currentFrame = 0;
     long lastFrameTimestamp = 0;
-    int fullStateFramesInterval = 50;
-    long oneFrameInterval = 25;
+    int keyFrameInterval = 50;
+    int frameTime = 25;
+
+    public boolean debug = false;
+
+    private void debug(String message) {
+        if (debug) {
+            System.out.println(message);
+        }
+    }
 
     public ServerSimSync(Simulation<STATE, INPUT, INFO> simulation, Bus<STATE, INPUT, INFO> bus) {
         super("ServerSimSync");
         this.simulation = simulation;
         this.bus = bus;
-        this.bus.setServerInfo(new ServerInfo(fullStateFramesInterval, oneFrameInterval, simulation.getInfo()));
+        this.bus.setServerInfo(new ServerInfo<INFO>(keyFrameInterval, keyFrameInterval * frameTime, simulation.getInfo()));
     }
 
     @Override
     public void run() {
         while (true) {
+
+            // sleep
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
             }
 
-            if (lastFrameTimestamp + oneFrameInterval <= System.currentTimeMillis()) {
+            if (lastFrameTimestamp + frameTime <= System.currentTimeMillis()) {
                 simulation.step();
                 currentFrame++;
                 lastFrameTimestamp = System.currentTimeMillis();
@@ -52,7 +62,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
                 states.add(simState);
                 for (Iterator<SimState<STATE>> iterator = states.iterator(); iterator.hasNext(); ) {
                     SimState<STATE> next = iterator.next();
-                    if (next.frame < currentFrame - fullStateFramesInterval) {
+                    if (next.frame < currentFrame - keyFrameInterval) {
                         iterator.remove();
                     }
                 }
@@ -60,12 +70,12 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
                 // clean old inputs
                 for (Iterator<SimInput<INPUT>> iterator = inputs.iterator(); iterator.hasNext(); ) {
                     SimInput<INPUT> next = iterator.next();
-                    if (next.frame < currentFrame - fullStateFramesInterval * 2) {
+                    if (next.frame < currentFrame - keyFrameInterval * 2) {
                         iterator.remove();
                     }
                 }
 
-                if (currentFrame % fullStateFramesInterval == 0) {
+                if (currentFrame % keyFrameInterval == 0) {
                     bus.sendFullState(simState);
                     continue;
                 }
@@ -93,9 +103,9 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
         if (input != null) {
             ArrayList<SimInput<INPUT>> newInputs = new ArrayList<SimInput<INPUT>>();
 
-            int firstFrame = input.frame;
+            long firstFrame = input.frame;
             while (input != null) {
-                if (input.frame < currentFrame + fullStateFramesInterval) { // ignore far future inputs
+                if (input.frame < currentFrame + keyFrameInterval) { // ignore far future inputs
                     if (input.frame < firstFrame) {
                         firstFrame = input.frame;
                     }
@@ -115,10 +125,10 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
                 return;
             }
             // merge
-            int actualFrame = currentFrame;
+            long actualFrame = currentFrame;
             SimState<STATE> simState = findNearestState(firstFrame);
 
-            System.out.println("Found state: " + simState);
+            debug("Found state: " + simState);
 
             if (simState == null) {
                 // no saved states found, ignore all inputs
@@ -138,7 +148,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
                 if (simInput.frame == currentFrame) {
                     simulation.input(simInput);
                     if (newInputs.contains(simInput)) {
-                        System.out.println("Send input");
+                        debug("Send input");
                         bus.sendInput(simInput);
                     }
                 }
@@ -151,7 +161,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
                 states.add(new SimState<STATE>(currentFrame, simulation.getFullState()));
                 for (Iterator<SimState<STATE>> iterator = states.iterator(); iterator.hasNext(); ) {
                     SimState<STATE> next = iterator.next();
-                    if (next.frame < currentFrame - fullStateFramesInterval * 2) {
+                    if (next.frame < currentFrame - keyFrameInterval * 2) {
                         iterator.remove();
                     }
                 }
@@ -160,7 +170,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
                     if (simInput.frame == currentFrame) {
                         simulation.input(simInput);
                         if (newInputs.contains(simInput)) {
-                            System.out.println("Send input");
+                            debug("Send input");
                             bus.sendInput(simInput);
                         }
                     }
@@ -176,7 +186,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
         }
     }
 
-    private SimState<STATE> findNearestState(int frame) {
+    private SimState<STATE> findNearestState(long frame) {
         SimState<STATE> result = null;
         SimState<STATE> oldestFrame = null;
 
