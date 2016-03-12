@@ -92,7 +92,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
                 lag--;
             }
 
-            if (Math.abs(lag) > keyFrameInterval / 2) {
+            if (Math.abs(lag) > keyFrameInterval) {
                 // reset to current
                 lag = 0;
                 frameTime = keyFrameIntervalTime / keyFrameInterval;
@@ -191,7 +191,8 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             // loading all inputs
             SimState<STATE> earliestState = getEarliestState(states);
             while (input != null) {
-                if (input.frame >= earliestState.frame &&
+                if (input.client != clientId &&
+                        input.frame >= earliestState.frame &&
                         input.frame < currentFrame &&
                         (!shouldMergeInputs || mergeFrom > input.frame)) {
                     mergeFrom = input.frame;

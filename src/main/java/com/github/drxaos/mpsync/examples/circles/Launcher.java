@@ -20,6 +20,7 @@ public class Launcher {
 
             CirclesEngine engine = new CirclesEngine();
             ServerSimSync<State, Click, CirclesInfo> sync = new ServerSimSync<State, Click, CirclesInfo>(engine, serverEndpoint);
+            sync.debug = true;
             sync.start();
 
             MainWindow ui = new MainWindow();

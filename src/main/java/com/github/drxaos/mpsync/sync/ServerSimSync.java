@@ -15,8 +15,8 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
     HashMap<SimState<STATE>, SimState<STATE>> states = new HashMap<SimState<STATE>, SimState<STATE>>();
     HashMap<SimInput<INPUT>, SimInput<INPUT>> inputs = new HashMap<SimInput<INPUT>, SimInput<INPUT>>();
 
-    int keyFrameInterval = 50;
-    int frameTime = 25;
+    int keyFrameInterval = 30;
+    int frameTime = 50;
 
     boolean shouldMergeInputs = false;
     long mergeFrom = 0;
@@ -81,6 +81,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
     private void sendFullState(SimState<STATE> simState) {
         // send fullstate
         if (currentFrame % keyFrameInterval == 0) {
+            debug("Send fullstate: " + currentFrame);
             bus.sendFullState(simState);
         }
 
