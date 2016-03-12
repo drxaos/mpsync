@@ -11,7 +11,7 @@ public class MoveEngine {
 
     private ArrayList<Spawn> living = new ArrayList<Spawn>();
 
-    private double timeFraction = 1.0 / 200.0;
+    private double timeFraction = 1.0 / 50.0;
     private ArrayList<Accel> constForces = new ArrayList<Accel>();
 
     public ArrayList<Spawn> getLiving() {
