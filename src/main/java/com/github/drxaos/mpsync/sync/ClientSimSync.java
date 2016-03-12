@@ -192,14 +192,17 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         SimInput<INPUT> input = bus.getInput();
         if (input != null) {
             // loading all inputs
+            boolean onlyMyInputs = true;
             SimState<STATE> earliestState = getEarliestState(states);
             while (input != null) {
-                if (input.client != clientId &&
-                        input.frame >= earliestState.frame &&
+                if (input.frame >= earliestState.frame &&
                         input.frame < currentFrame &&
                         (!shouldMergeInputs || mergeFrom > input.frame)) {
                     mergeFrom = input.frame;
                     shouldMergeInputs = true;
+                    if (input.client != clientId) {
+                        onlyMyInputs = false;
+                    }
                 }
                 if (input.client == clientId) {
                     debug("Save my input " + input.client + ":" + input.frame + "");
@@ -212,8 +215,12 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             }
 
             if (shouldMergeInputs) {
-                removeStatesAfter(serverStates, mergeFrom);
-                removeStatesAfter(states, mergeFrom);
+                if (onlyMyInputs) {
+                    shouldMergeInputs = false;
+                } else {
+                    removeStatesAfter(serverStates, mergeFrom);
+                    removeStatesAfter(states, mergeFrom);
+                }
             }
         }
     }
