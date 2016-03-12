@@ -53,7 +53,7 @@ public class CirclesConverter implements Converter<State, Click, CirclesInfo> {
     }
 
     public ServerInfo<CirclesInfo> deserializeServerInfo(byte[] data) {
-        Type type = new TypeToken<ServerInfo>() {
+        Type type = new TypeToken<ServerInfo<CirclesInfo>>() {
         }.getType();
 
         ServerInfo<CirclesInfo> result = gson.fromJson(new String(data).substring(1), type);
