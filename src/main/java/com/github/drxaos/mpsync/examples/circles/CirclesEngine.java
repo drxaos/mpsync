@@ -59,7 +59,11 @@ public class CirclesEngine implements Simulation<State, Click, CirclesInfo> {
     }
 
     public CirclesInfo getInfo() {
-        return new CirclesInfo();
+        return new CirclesInfo(moveEngine.getTimeFraction());
+    }
+
+    public void setServerInfo(CirclesInfo circlesInfo) {
+        moveEngine.setTimeFraction(circlesInfo.timeFraction);
     }
 
     public void input(SimInput<Click> simInput) {

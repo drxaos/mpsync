@@ -33,6 +33,14 @@ public class MoveEngine {
         initializeConstForces();
     }
 
+    public double getTimeFraction() {
+        return timeFraction;
+    }
+
+    public void setTimeFraction(double timeFraction) {
+        this.timeFraction = timeFraction;
+    }
+
     public void step() {
         applyConstForces();
         sumForces();

@@ -14,7 +14,6 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
 
     HashMap<SimState<STATE>, SimState<STATE>> states = new HashMap<SimState<STATE>, SimState<STATE>>();
     HashMap<SimInput<INPUT>, SimInput<INPUT>> inputs = new HashMap<SimInput<INPUT>, SimInput<INPUT>>();
-    HashMap<SimInput<INPUT>, SimInput<INPUT>> pendingInputs = new HashMap<SimInput<INPUT>, SimInput<INPUT>>();
     HashMap<SimState<STATE>, SimState<STATE>> serverStates = new HashMap<SimState<STATE>, SimState<STATE>>();
     HashMap<SimInput<INPUT>, SimInput<INPUT>> serverInputs = new HashMap<SimInput<INPUT>, SimInput<INPUT>>();
     ServerInfo<INFO> serverInfo = null;
@@ -132,7 +131,6 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         currentFrameStart = System.currentTimeMillis();
     }
 
-
     private void sleep() {
         try {
             Thread.sleep(1);
@@ -165,6 +163,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         keyFrameInterval = serverInfo.keyFrameInterval;
         keyFrameIntervalTime = serverInfo.keyFrameIntervalTime;
         frameTime = keyFrameIntervalTime / keyFrameInterval;
+        simulation.setServerInfo(serverInfo.info);
     }
 
     private void cleanOldData() {

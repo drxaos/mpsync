@@ -15,4 +15,6 @@ public interface Simulation<STATE, INPUT, INFO> {
     INFO getInfo();
 
     void input(SimInput<INPUT> simInput);
+
+    void setServerInfo(INFO info);
 }

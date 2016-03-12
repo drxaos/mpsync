@@ -1,4 +1,14 @@
 package com.github.drxaos.mpsync.examples.circles;
 
-public class CirclesInfo {
+import java.io.Serializable;
+
+public class CirclesInfo implements Serializable {
+    public double timeFraction;
+
+    public CirclesInfo() {
+    }
+
+    public CirclesInfo(double timeFraction) {
+        this.timeFraction = timeFraction;
+    }
 }
