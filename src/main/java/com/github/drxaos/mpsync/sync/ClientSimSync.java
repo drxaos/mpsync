@@ -142,6 +142,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         // handle user input
         INPUT input = simulation.getInput();
         if (input != null) {
+            debug("-->My new input: " + currentFrame);
             SimInput<INPUT> simInput = new SimInput<INPUT>(currentFrame, input);
             simInput.client = clientId;
             inputs.put(simInput, simInput); // save
