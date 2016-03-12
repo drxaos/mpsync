@@ -1,6 +1,7 @@
 package com.github.drxaos.mpsync.sync;
 
 import com.github.drxaos.mpsync.bus.Bus;
+import com.github.drxaos.mpsync.bus.ServerInfo;
 import com.github.drxaos.mpsync.sim.Simulation;
 
 import java.util.HashSet;
@@ -27,6 +28,8 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
     LinkedList<Long> syncIntervals = new LinkedList<Long>();
     long oneFrameInterval = Long.MAX_VALUE;
 
+    int clientId = 0;
+
     public ClientSimSync(Simulation<STATE, INPUT, INFO> simulation, Bus<STATE, INPUT, INFO> bus) {
         super("ClientSimSync");
         this.simulation = simulation;
@@ -37,7 +40,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         System.out.println("FULLSTATE: " + currentFrame + " -> " + simState.frame);
 
         int lag = simState.frame - currentFrame;
-        if (adjust && lag < fullStateFramesInterval / 10) {
+        if (adjust && lag < fullStateFramesInterval / 4) {
             futureStates.add(simState);
         } else {
             lag = 0;
@@ -90,6 +93,13 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             } catch (InterruptedException e) {
             }
 
+            ServerInfo<INFO> serverInfo = bus.getServerInfo();
+            if (serverInfo != null) {
+                clientId = serverInfo.clientId;
+                //fullStateFramesInterval = serverInfo.fullStateFramesInterval;
+                //oneFrameInterval = serverInfo.oneFrameInterval;
+            }
+
             if (syncIntervals.size() < ADJUST_INTERVALS) {
                 // Initializing
                 SimState<STATE> fullState = bus.getFullState();
@@ -117,6 +127,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             INPUT input = simulation.getInput();
             if (input != null) {
                 SimInput<INPUT> simInput = new SimInput<INPUT>(currentFrame, input);
+                simInput.client = clientId;
                 bus.sendInput(simInput);
                 simulation.input(simInput);
                 inputs.add(simInput);
@@ -171,6 +182,9 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
     void handleIncomingInputs() {
         // handle inputs
         SimInput<INPUT> input = bus.getInput();
+        while (input != null && input.client == clientId) {
+            input = bus.getInput();
+        }
         if (input != null) {
             int firstFrame = input.frame;
             while (input != null) {
@@ -179,6 +193,9 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
                 }
                 inputs.add(input);
                 input = bus.getInput();
+                while (input != null && input.client == clientId) {
+                    input = bus.getInput();
+                }
             }
             // merge
             int actualFrame = currentFrame;
