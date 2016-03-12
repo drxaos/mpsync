@@ -82,7 +82,10 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
         // send fullstate
         if (currentFrame % keyFrameInterval == 0) {
             debug("Send fullstate: " + currentFrame);
-            bus.sendFullState(simState);
+            SimState<STATE> simStatePair = new SimState<STATE>(simState);
+            // send old state for clients with unaccepted inputs
+            simStatePair.prevState = findNearestState(currentFrame - keyFrameInterval);
+            bus.sendFullState(simStatePair);
         }
 
         // ignore incoming fullstates

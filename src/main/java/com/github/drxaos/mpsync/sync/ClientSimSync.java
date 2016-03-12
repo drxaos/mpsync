@@ -14,6 +14,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
 
     HashMap<SimState<STATE>, SimState<STATE>> states = new HashMap<SimState<STATE>, SimState<STATE>>();
     HashMap<SimInput<INPUT>, SimInput<INPUT>> inputs = new HashMap<SimInput<INPUT>, SimInput<INPUT>>();
+    HashMap<SimInput<INPUT>, SimInput<INPUT>> pendingInputs = new HashMap<SimInput<INPUT>, SimInput<INPUT>>();
     HashMap<SimState<STATE>, SimState<STATE>> serverStates = new HashMap<SimState<STATE>, SimState<STATE>>();
     HashMap<SimInput<INPUT>, SimInput<INPUT>> serverInputs = new HashMap<SimInput<INPUT>, SimInput<INPUT>>();
     ServerInfo<INFO> serverInfo = null;
@@ -77,13 +78,29 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         }
     }
 
+    private boolean hasUnacceptedInputs(HashMap<SimInput<INPUT>, SimInput<INPUT>> inputs) {
+        for (SimInput<INPUT> simInput : inputs.values()) {
+            if (!simInput.accepted) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void handleIncomingState() {
         // handle incoming fullstate
         SimState<STATE> simState = bus.getFullState();
         if (simState != null) {
             debug("FULLSTATE: " + currentFrame + " -> " + simState.frame);
 
-            serverStates.put(simState, simState);
+            if (hasUnacceptedInputs(inputs) && simState.prevState != null) { // merge previous server state
+                debug("Has unaccepted inputs, merge " + simState.prevState.frame);
+                long actualFrame = currentFrame;
+                applyState(simState.prevState);
+                seek(actualFrame);
+            } else { // save new state
+                serverStates.put(simState, simState);
+            }
             lastSyncFrame = simState.frame;
 
             lag = (int) (simState.frame - currentFrame);
@@ -206,7 +223,12 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
                 }
                 if (input.client == clientId) {
                     debug("Save my input " + input.client + ":" + input.frame + "");
-                    inputs.put(input, input);
+                    SimInput<INPUT> myInput = inputs.get(input);
+                    if (myInput != null) {
+                        myInput.accepted = true;
+                    } else {
+                        inputs.put(input, input);
+                    }
                 } else {
                     debug("Save srv input " + input.client + ":" + input.frame + "");
                     serverInputs.put(input, input);
@@ -288,17 +310,21 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             }
 
             applyState(simState);
+            seek(actualFrame);
+        }
+    }
 
-            // seek
-            while (currentFrame < actualFrame) {
-                applyInputs(serverInputs, currentFrame);
-                applyInputs(inputs, currentFrame);
-                simulation.step();
-                currentFrame++;
-                debug("currentFrame=" + currentFrame + " at handleIncomingInputs");
-                SimState<STATE> newSimState = new SimState<STATE>(currentFrame, simulation.getFullState());
-                states.put(newSimState, newSimState);
-            }
+    private void seek(long toFrame) {
+        // seek
+        debug("Seek to " + toFrame);
+        while (currentFrame < toFrame) {
+            applyInputs(serverInputs, currentFrame);
+            applyInputs(inputs, currentFrame);
+            simulation.step();
+            currentFrame++;
+            debug("currentFrame=" + currentFrame + " at handleIncomingInputs");
+            SimState<STATE> newSimState = new SimState<STATE>(currentFrame, simulation.getFullState());
+            states.put(newSimState, newSimState);
         }
     }
 

@@ -10,6 +10,7 @@ public class SimInput<INPUT> implements Serializable {
     public int client = 0;
     public INPUT input;
     public long timestamp;
+    transient boolean accepted = false;
 
     public SimInput() {
         this.id = idCounter++;

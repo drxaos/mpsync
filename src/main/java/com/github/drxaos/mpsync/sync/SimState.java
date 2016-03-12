@@ -6,9 +6,16 @@ public class SimState<STATE> implements Serializable {
     public long frame;
     public STATE state;
     public long timestamp;
+    public SimState<STATE> prevState = null;
 
     public SimState() {
         this.timestamp = System.currentTimeMillis();
+    }
+
+    public SimState(SimState<STATE> simState) {
+        this.timestamp = System.currentTimeMillis();
+        this.frame = simState.frame;
+        this.state = simState.state;
     }
 
     public SimState(long frame, STATE state) {
