@@ -20,6 +20,7 @@ public class Test {
 
                     CirclesEngine engine = new CirclesEngine();
                     ServerSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo> sync = new ServerSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo>(engine, serverEndpoint);
+                    sync.debug = true;
                     sync.start();
 
                     MainWindow ui = new MainWindow();
@@ -45,6 +46,7 @@ public class Test {
 
                     CirclesEngine engine = new CirclesEngine();
                     ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo> sync = new ClientSimSync<com.github.drxaos.mpsync.examples.circles.State, Click, CirclesInfo>(engine, clientEndpoint);
+                    sync.debug = true;
                     sync.start();
 
                     MainWindow ui = new MainWindow();
