@@ -131,6 +131,9 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             simInput.client = clientId;
             inputs.put(simInput, simInput); // save
             bus.sendInput(simInput); // send
+
+            removeStatesAfter(serverStates, currentFrame);
+            removeStatesAfter(states, currentFrame);
         }
     }
 
