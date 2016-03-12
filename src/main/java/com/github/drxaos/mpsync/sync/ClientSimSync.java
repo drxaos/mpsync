@@ -53,9 +53,15 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         while (true) {
             sleep();
             cleanOldData();
-            handleIncomingState();
             readIncomingInputs();
-            clientPrediction();
+
+            try {
+                simulation.lockView();
+                handleIncomingState();
+                clientPrediction();
+            } finally {
+                simulation.unlockView();
+            }
         }
     }
 
@@ -133,7 +139,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
 
     private void sleep() {
         try {
-            Thread.sleep(1);
+            Thread.sleep(10);
         } catch (InterruptedException e) {
         }
     }

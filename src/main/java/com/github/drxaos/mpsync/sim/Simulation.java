@@ -17,4 +17,8 @@ public interface Simulation<STATE, INPUT, INFO> {
     void input(SimInput<INPUT> simInput);
 
     void setServerInfo(INFO info);
+
+    void lockView();
+
+    void unlockView();
 }

@@ -6,11 +6,13 @@ import com.github.drxaos.mpsync.sim.Simulation;
 import com.github.drxaos.mpsync.sync.SimInput;
 
 import java.awt.event.MouseEvent;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class CirclesEngine implements Simulation<State, Click, CirclesInfo> {
 
     final MoveEngine moveEngine = new MoveEngine();
     private MainWindow controller;
+    private ReentrantLock lockView = new ReentrantLock();
 
     Click input;
 
@@ -24,18 +26,31 @@ public class CirclesEngine implements Simulation<State, Click, CirclesInfo> {
     }
 
     public State getFullState() {
-        synchronized (moveEngine) {
+        try {
+            lockView.lock();
             State state = new State();
             state.living = moveEngine.getLiving();
             return state;
+        } finally {
+            lockView.unlock();
         }
     }
 
     public void setFullState(State state) {
-        synchronized (moveEngine) {
-            //System.out.println("FULLSTATE: " + state.living.size());
+        try {
+            lockView.lock();
             moveEngine.setLiving(state.living);
+        } finally {
+            lockView.unlock();
         }
+    }
+
+    public void lockView() {
+        lockView.lock();
+    }
+
+    public void unlockView() {
+        lockView.unlock();
     }
 
     public void step() {

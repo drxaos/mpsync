@@ -15,8 +15,8 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
     HashMap<SimState<STATE>, SimState<STATE>> states = new HashMap<SimState<STATE>, SimState<STATE>>();
     HashMap<SimInput<INPUT>, SimInput<INPUT>> inputs = new HashMap<SimInput<INPUT>, SimInput<INPUT>>();
 
-    int keyFrameInterval = 30;
-    int frameTime = 50;
+    int keyFrameInterval = 50;
+    int frameTime = 1000 / 25;
 
     boolean shouldMergeInputs = false;
     long mergeFrom = 0;
@@ -48,15 +48,22 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
 
                 readIncomingInputs();
                 readUserInput();
-                handleIncomingInputs();
 
-                // apply inputs
-                applyInputs(inputs, currentFrame);
+                try {
+                    simulation.lockView();
+                    handleIncomingInputs();
 
-                // simulation
-                simulation.step();
-                currentFrame++;
-                currentFrameStart = System.currentTimeMillis();
+                    // apply inputs
+                    applyInputs(inputs, currentFrame);
+
+                    // simulation
+                    simulation.step();
+                    currentFrame++;
+                    currentFrameStart = System.currentTimeMillis();
+
+                } finally {
+                    simulation.unlockView();
+                }
 
                 // save state
                 SimState<STATE> simState = new SimState<STATE>(currentFrame, simulation.getFullState());
@@ -98,7 +105,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
         // remove old states
         for (Iterator<SimState<STATE>> iterator = states.values().iterator(); iterator.hasNext(); ) {
             SimState<STATE> next = iterator.next();
-            if (next.frame < currentFrame - keyFrameInterval) {
+            if (next.frame < currentFrame - keyFrameInterval * 2) {
                 iterator.remove();
             }
         }
@@ -114,7 +121,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
 
     private void sleep() {
         try {
-            Thread.sleep(1);
+            Thread.sleep(10);
         } catch (InterruptedException e) {
         }
     }
@@ -196,25 +203,19 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
             }
 
             applyState(simState);
+            seek(actualFrame);
+        }
+    }
 
-            // seek
-            while (currentFrame < actualFrame) {
-                applyInputs(inputs, currentFrame);
-                simulation.step();
-                currentFrame++;
-                debug("currentFrame=" + currentFrame + " at handleIncomingInputs");
-                SimState<STATE> newSimState = new SimState<STATE>(currentFrame, simulation.getFullState());
-                states.put(newSimState, newSimState);
-            }
-
-            // seek
-            while (currentFrame < actualFrame) {
-                applyInputs(inputs, currentFrame);
-                simulation.step();
-                currentFrame++;
-                SimState<STATE> newSimState = new SimState<STATE>(currentFrame, simulation.getFullState());
-                states.put(newSimState, newSimState);
-            }
+    private void seek(long toFrame) {
+        // seek
+        while (currentFrame < toFrame) {
+            applyInputs(inputs, currentFrame);
+            simulation.step();
+            currentFrame++;
+            debug("currentFrame=" + currentFrame + " at handleIncomingInputs");
+            SimState<STATE> newSimState = new SimState<STATE>(currentFrame, simulation.getFullState());
+            states.put(newSimState, newSimState);
         }
     }
 
