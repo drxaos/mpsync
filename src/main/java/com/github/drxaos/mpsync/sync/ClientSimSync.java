@@ -189,8 +189,11 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         SimInput<INPUT> input = bus.getInput();
         if (input != null) {
             // loading all inputs
+            SimState<STATE> earliestState = getEarliestState(states);
             while (input != null) {
-                if (input.frame < currentFrame && (!shouldMergeInputs || mergeFrom > input.frame)) {
+                if (input.frame >= earliestState.frame &&
+                        input.frame < currentFrame &&
+                        (!shouldMergeInputs || mergeFrom > input.frame)) {
                     mergeFrom = input.frame;
                     shouldMergeInputs = true;
                 }
@@ -218,6 +221,16 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
                 iterator.remove();
             }
         }
+    }
+
+    private SimState<STATE> getEarliestState(HashMap<SimState<STATE>, SimState<STATE>> states) {
+        SimState<STATE> result = null;
+        for (SimState<STATE> simState : states.values()) {
+            if (result == null || result.frame > simState.frame) {
+                result = simState;
+            }
+        }
+        return result;
     }
 
     private void clientPrediction() {
