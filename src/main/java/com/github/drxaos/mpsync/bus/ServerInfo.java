@@ -7,6 +7,8 @@ public class ServerInfo<INFO> implements Serializable {
     public int clientId;
     public int keyFrameInterval;
     public int keyFrameIntervalTime;
+    public int inputLatencyTime;
+
     public INFO info;
 
     public ServerInfo() {
@@ -16,12 +18,14 @@ public class ServerInfo<INFO> implements Serializable {
         this.clientId = clientId;
         this.keyFrameInterval = serverInfo.keyFrameInterval;
         this.keyFrameIntervalTime = serverInfo.keyFrameIntervalTime;
+        this.inputLatencyTime = serverInfo.inputLatencyTime;
         this.info = serverInfo.info;
     }
 
-    public ServerInfo(int keyFrameInterval, int keyFrameIntervalTime, INFO info) {
+    public ServerInfo(int keyFrameInterval, int keyFrameIntervalTime, int inputLatencyTime, INFO info) {
         this.keyFrameInterval = keyFrameInterval;
         this.keyFrameIntervalTime = keyFrameIntervalTime;
+        this.inputLatencyTime = inputLatencyTime;
         this.info = info;
     }
 }

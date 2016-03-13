@@ -9,6 +9,8 @@ public interface Simulation<STATE, INPUT, INFO> {
 
     void setFullState(STATE state);
 
+    boolean forceFullState();
+
     void step();
 
     INPUT getInput();

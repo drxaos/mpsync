@@ -20,6 +20,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
 
     int keyFrameInterval = 1000;
     int keyFrameIntervalTime = 60000;
+    int inputLatencyTime = 0;
     int clientId = 0;
 
     boolean shouldMergeInputs = false;
@@ -148,14 +149,15 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         // handle user input
         INPUT input = simulation.getInput();
         if (input != null) {
-            debug("-->My new input: " + currentFrame);
-            SimInput<INPUT> simInput = new SimInput<INPUT>(currentFrame, input);
+            long inputFrame = currentFrame + (inputLatencyTime / frameTime);
+            debug("-->My new input: " + inputFrame + " (latency " + inputLatencyTime + ")");
+            SimInput<INPUT> simInput = new SimInput<INPUT>(inputFrame, input);
             simInput.client = clientId;
             inputs.put(simInput, simInput); // save
             bus.sendInput(simInput); // send
 
-            removeStatesAfter(serverStates, currentFrame);
-            removeStatesAfter(states, currentFrame);
+            removeStatesAfter(serverStates, inputFrame);
+            removeStatesAfter(states, inputFrame);
         }
     }
 
@@ -170,6 +172,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         keyFrameInterval = serverInfo.keyFrameInterval;
         keyFrameIntervalTime = serverInfo.keyFrameIntervalTime;
         frameTime = keyFrameIntervalTime / keyFrameInterval;
+        inputLatencyTime = serverInfo.inputLatencyTime;
         simulation.setServerInfo(serverInfo);
     }
 

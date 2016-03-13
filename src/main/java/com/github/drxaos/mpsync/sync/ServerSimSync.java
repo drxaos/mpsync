@@ -17,6 +17,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
 
     int keyFrameInterval = 50;
     int frameTime = 1000 / 25;
+    int inputLatencyTime = 130;
 
     boolean shouldMergeInputs = false;
     long mergeFrom = 0;
@@ -36,7 +37,11 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
         super("ServerSimSync");
         this.simulation = simulation;
         this.bus = bus;
-        this.bus.setServerInfo(new ServerInfo<INFO>(keyFrameInterval, keyFrameInterval * frameTime, simulation.getInfo()));
+        this.bus.setServerInfo(new ServerInfo<INFO>(
+                keyFrameInterval,
+                keyFrameInterval * frameTime,
+                inputLatencyTime,
+                simulation.getInfo()));
     }
 
     @Override
@@ -79,7 +84,8 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
         // read user input
         INPUT input = simulation.getInput();
         if (input != null) {
-            SimInput<INPUT> simInput = new SimInput<INPUT>(currentFrame, input);
+            long inputFrame = currentFrame + (inputLatencyTime / frameTime);
+            SimInput<INPUT> simInput = new SimInput<INPUT>(inputFrame, input);
             inputs.put(simInput, simInput);
             bus.sendInput(simInput);
         }
@@ -87,7 +93,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
 
     private void sendFullState(SimState<STATE> simState) {
         // send fullstate
-        if (currentFrame % keyFrameInterval == 0) {
+        if (simulation.forceFullState() || currentFrame % keyFrameInterval == 0) {
             debug("Send fullstate: " + currentFrame);
             SimState<STATE> simStatePair = new SimState<STATE>(simState);
             // send old state for clients with unaccepted inputs
@@ -128,7 +134,7 @@ public class ServerSimSync<STATE, INPUT, INFO> extends Thread {
 
     private void applyInputs(HashMap<SimInput<INPUT>, SimInput<INPUT>> inputs, long frame) {
         for (SimInput<INPUT> simInput : inputs.values()) {
-            if (simInput.frame == currentFrame) {
+            if (simInput.frame == frame) {
                 debug("Apply input " + simInput.client + ":" + simInput.frame + "");
                 simulation.input(simInput);
             }

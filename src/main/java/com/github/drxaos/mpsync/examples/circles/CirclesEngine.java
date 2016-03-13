@@ -46,6 +46,10 @@ public class CirclesEngine implements Simulation<State, Click, CirclesInfo> {
         }
     }
 
+    public boolean forceFullState() {
+        return false;
+    }
+
     public void lockView() {
         lockView.lock();
     }

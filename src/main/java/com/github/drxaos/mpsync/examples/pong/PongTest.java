@@ -20,7 +20,7 @@ public class PongTest {
                 try {
                     SimpleTcpServerEndpoint<Board, Keys, Info> serverEndpoint = new SimpleTcpServerEndpoint<Board, Keys, Info>(5001, new PongConverter());
 
-                    Pong engine = new Pong(Player.KEYBOARD1, Player.KEYBOARD2);
+                    Pong engine = new Pong();
                     ServerSimSync<Board, Keys, Info> sync = new ServerSimSync<Board, Keys, Info>(engine, serverEndpoint);
                     sync.debug = true;
                     sync.start();
@@ -43,7 +43,30 @@ public class PongTest {
                 try {
                     SimpleTcpClientEndpoint<Board, Keys, Info> clientEndpoint = new SimpleTcpClientEndpoint<Board, Keys, Info>("localhost", 5001, new PongConverter());
 
-                    Pong engine = new Pong(Player.KEYBOARD1, Player.KEYBOARD2);
+                    Pong engine = new Pong();
+                    ClientSimSync<Board, Keys, Info> sync = new ClientSimSync<Board, Keys, Info>(engine, clientEndpoint);
+                    sync.debug = true;
+                    sync.start();
+
+                    PongWindow ui = new PongWindow();
+                    ui.setContent(engine);
+                    ui.setVisible(true);
+
+                    clientEndpoint.start();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    SimpleTcpClientEndpoint<Board, Keys, Info> clientEndpoint = new SimpleTcpClientEndpoint<Board, Keys, Info>("localhost", 5001, new PongConverter());
+
+                    Pong engine = new Pong();
                     ClientSimSync<Board, Keys, Info> sync = new ClientSimSync<Board, Keys, Info>(engine, clientEndpoint);
                     sync.debug = true;
                     sync.start();

@@ -138,7 +138,7 @@ public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
                             outToServer.writeBytes("\n");
                             simState = simStatesOut.poll();
                         }
-                        ServerInfo serverInfo = serverInfosOut.poll();
+                        ServerInfo<INFO> serverInfo = serverInfosOut.poll();
                         while (serverInfo != null) {
                             byte[] data = converter.serializeServerInfo(serverInfo);
                             debug("OUT(" + client + "): " + new String(data));

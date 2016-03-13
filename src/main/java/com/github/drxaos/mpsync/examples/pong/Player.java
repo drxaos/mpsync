@@ -6,19 +6,11 @@ package com.github.drxaos.mpsync.examples.pong;/*
  */
 
 public class Player {
-    public static final int KEYBOARD1 = 1;
-    public static final int KEYBOARD2 = 2;
-
-    public int type;
-    public int position = 0;
+    public int position = 240;
     public int destination = 0;
     public int points = 0;
+    public int clientId = 0;
 
-    public Player(int type) {
-        this.type = type;
-    }
-
-    public int getType() {
-        return type;
+    public Player() {
     }
 }

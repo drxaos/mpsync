@@ -24,4 +24,7 @@ public class Board {
     public boolean key_up2 = false;
     public boolean key_down2 = false;
 
+    public int player1Id;
+    public int player2Id;
+    public int countDown;
 }

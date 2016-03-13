@@ -16,6 +16,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.geom.Rectangle2D;
 import java.util.Random;
 
 public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys, Info> {
@@ -53,14 +54,17 @@ public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys,
 
     private Keys input = null;
     private int clientId = 0;
+    private boolean forceFullState = false;
+
+    private int countDown = 5 * 1000 / 25;
 
     // Constructor
-    public Pong(int p1_type, int p2_type) {
+    public Pong() {
         super();
         setBackground(new Color(0, 0, 0));
 
-        player1 = new Player(p1_type);
-        player2 = new Player(p2_type);
+        player1 = new Player();
+        player2 = new Player();
     }
 
     // Compute destination of the ball
@@ -100,28 +104,21 @@ public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys,
                 player.position = HEIGHT;
             if (player.position + HEIGHT > getHeight())
                 player.position = getHeight() - HEIGHT;
-
-            System.out.println("Pos(" + clientId + "): " + player.type + " = " + player.position);
         }
     }
 
     // Compute player position
-    private void computePosition(Player player) {
-        // KEYBOARD1
-        if (player.getType() == Player.KEYBOARD1) {
-            if (key_up1 && !key_down1) {
-                movePlayer(player, player.position - SPEED);
-            } else if (key_down1 && !key_up1) {
-                movePlayer(player, player.position + SPEED);
-            }
+    private void computePositions() {
+        if (key_up1 && !key_down1) {
+            movePlayer(player1, player1.position - SPEED);
+        } else if (key_down1 && !key_up1) {
+            movePlayer(player1, player1.position + SPEED);
         }
-        // KEYBOARD2
-        if (player.getType() == Player.KEYBOARD2) {
-            if (key_up2 && !key_down2) {
-                movePlayer(player, player.position - SPEED);
-            } else if (key_down2 && !key_up2) {
-                movePlayer(player, player.position + SPEED);
-            }
+
+        if (key_up2 && !key_down2) {
+            movePlayer(player2, player2.position - SPEED);
+        } else if (key_down2 && !key_up2) {
+            movePlayer(player2, player2.position + SPEED);
         }
     }
 
@@ -133,7 +130,7 @@ public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys,
             ball_x = getWidth() / 2;
             ball_y = getHeight() / 2;
 
-            Random generator = new Random(frame += 1000000);
+            Random generator = new Random(642375 * frame++);
             double phase = generator.nextDouble() * Math.PI / 2 - Math.PI / 4;
             ball_x_speed = (int) (Math.cos(phase) * START_SPEED * (generator.nextBoolean() ? -1 : 1));
             ball_y_speed = (int) (Math.sin(phase) * START_SPEED);
@@ -143,9 +140,18 @@ public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys,
             new_game = false;
         }
 
-        computePosition(player1);
-        computePosition(player2);
+        computePositions();
 
+        if (player1.clientId != 0 && player2.clientId != 0 && countDown > 0) {
+            countDown--;
+        }
+
+        if (countDown <= 0) {
+            moveBall();
+        }
+    }
+
+    private void moveBall() {
         // Calcola la posizione della pallina
         ball_x += ball_x_speed;
         ball_y += ball_y_speed;
@@ -206,24 +212,46 @@ public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys,
             ball_y_speed = -1 * Math.abs(ball_y_speed);
             ball_y = 2 * (getHeight() - RADIUS) - ball_y;
         }
-
     }
+
+    Font largeFont = new Font(Font.SANS_SERIF, Font.BOLD, 100);
+    Font mediumFont = new Font(Font.SANS_SERIF, Font.BOLD, 20);
 
     // Draw
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
         // Disegna i carrelli
-        g.setColor(Color.WHITE);
+        g.setColor(player1.clientId == 0 ? Color.GRAY : Color.WHITE);
         g.fillRect(PADDING, player1.position - HEIGHT, WIDTH, HEIGHT * 2);
-        g.fillRect(getWidth() - PADDING - WIDTH, player2.position - HEIGHT, WIDTH, HEIGHT * 2);
 
-        // Disegna la palla
-        g.fillOval(ball_x - RADIUS, ball_y - RADIUS, RADIUS * 2, RADIUS * 2);
+        g.setColor(player2.clientId == 0 ? Color.GRAY : Color.WHITE);
+        g.fillRect(getWidth() - PADDING - WIDTH, player2.position - HEIGHT, WIDTH, HEIGHT * 2);
 
         // Disegna i punti
         g.drawString(player1.points + " ", getWidth() / 2 - 20, 20);
         g.drawString(player2.points + " ", getWidth() / 2 + 20, 20);
+
+        if (player1.clientId != 0 && player2.clientId != 0 && countDown > 0) {
+            String s = "" + (countDown * 25 / 1000);
+            g.setFont(largeFont);
+            FontMetrics fm = g.getFontMetrics();
+            Rectangle2D r = fm.getStringBounds(s, g);
+            int x = (this.getWidth() - (int) r.getWidth()) / 2;
+            int y = (this.getHeight() - (int) r.getHeight()) / 2 + fm.getAscent();
+            g.drawString(s, x, y);
+        } else if (countDown > 0) {
+            String s = "Waiting for opponent";
+            g.setFont(mediumFont);
+            FontMetrics fm = g.getFontMetrics();
+            Rectangle2D r = fm.getStringBounds(s, g);
+            int x = (this.getWidth() - (int) r.getWidth()) / 2;
+            int y = (this.getHeight() - (int) r.getHeight()) / 2 + fm.getAscent();
+            g.drawString(s, x, y);
+        } else if (countDown <= 0) {
+            // Disegna la palla
+            g.fillOval(ball_x - RADIUS, ball_y - RADIUS, RADIUS * 2, RADIUS * 2);
+        }
     }
 
     // Key pressed
@@ -263,16 +291,19 @@ public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys,
         state.key_down1 = key_down1;
         state.key_up2 = key_up2;
         state.key_down2 = key_down2;
+        state.countDown = countDown;
 
-        state.player1 = new Player(player1.type);
+        state.player1 = new Player();
         state.player1.position = player1.position;
         state.player1.destination = player1.destination;
         state.player1.points = player1.points;
+        state.player1.clientId = player1.clientId;
 
-        state.player2 = new Player(player2.type);
+        state.player2 = new Player();
         state.player2.position = player2.position;
         state.player2.destination = player2.destination;
         state.player2.points = player2.points;
+        state.player2.clientId = player2.clientId;
 
         return state;
     }
@@ -290,13 +321,14 @@ public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys,
         key_down1 = state.key_down1;
         key_up2 = state.key_up2;
         key_down2 = state.key_down2;
+        countDown = state.countDown;
 
-        player1.type = state.player1.type;
+        player1.clientId = state.player1.clientId;
         player1.position = state.player1.position;
         player1.destination = state.player1.destination;
         player1.points = state.player1.points;
 
-        player2.type = state.player2.type;
+        player2.clientId = state.player2.clientId;
         player2.position = state.player2.position;
         player2.destination = state.player2.destination;
         player2.points = state.player2.points;
@@ -318,11 +350,33 @@ public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys,
         return new Info();
     }
 
+    public boolean forceFullState() {
+        try {
+            return forceFullState;
+        } finally {
+            forceFullState = false;
+        }
+    }
+
     public void input(SimInput<Keys> simInput) {
-        if (simInput.client == 0) {
+
+        // get players
+        if (clientId == 0 && countDown > 0) {
+            if (player1.clientId == 0) {
+                player1.clientId = simInput.client;
+                forceFullState = true;
+            }
+            if (player2.clientId == 0 && player1.clientId != simInput.client) {
+                player2.clientId = simInput.client;
+                forceFullState = true;
+            }
+        }
+
+        if (simInput.client == player1.clientId) {
             key_down1 = simInput.input.key_down;
             key_up1 = simInput.input.key_up;
-        } else {
+        }
+        if (simInput.client == player2.clientId) {
             key_down2 = simInput.input.key_down;
             key_up2 = simInput.input.key_up;
         }
@@ -331,7 +385,7 @@ public class Pong extends JPanel implements KeyListener, Simulation<Board, Keys,
     public void setServerInfo(ServerInfo<Info> info) {
         clientId = info.clientId;
         JFrame frame = (JFrame) SwingUtilities.getRoot(this);
-        frame.setTitle("Pong: " + (clientId > 0 ? "client" : "server"));
+        frame.setTitle("Pong: " + (clientId > 0 ? "client " + clientId : "server"));
     }
 
     public void lockView() {
