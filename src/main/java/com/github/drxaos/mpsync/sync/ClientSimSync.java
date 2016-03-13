@@ -99,7 +99,17 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         if (simState != null) {
             debug("FULLSTATE: " + currentFrame + " -> " + simState.frame);
 
-            if (hasUnacceptedInputs(inputs) && simState.prevState != null) { // merge previous server state
+            if (simState.override) {
+                debug("Overriding state: " + simState);
+                serverStates.put(simState, simState);
+                removeStatesBefore(serverStates, simState.frame);
+                removeStatesBefore(states, simState.frame + keyFrameInterval);
+
+                lag = 0;
+                frameTime = keyFrameIntervalTime / keyFrameInterval;
+                applyState(simState);
+
+            } else if (hasUnacceptedInputs(inputs) && simState.prevState != null) { // merge previous server state
                 debug("Has unaccepted inputs, merge " + simState.prevState.frame);
                 long actualFrame = currentFrame;
                 applyState(simState.prevState);
@@ -109,17 +119,21 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             }
             lastSyncFrame = simState.frame;
 
-            lag = (int) (simState.frame - currentFrame);
+            lag = (int) ((simState.frame - currentFrame) + lag) / 2;
             if (lag < 0) {
                 // make simulation slower
                 lag--;
             }
 
-            if (Math.abs(lag) > keyFrameInterval) {
+            if (lag == 0) {
+                // no lag, correcting current frame
+                applyState(simState);
+            } else if (Math.abs(lag) > keyFrameInterval) {
                 // reset to current
                 lag = 0;
                 frameTime = keyFrameIntervalTime / keyFrameInterval;
 
+                debug("Reset state: " + simState);
                 applyState(simState);
 
             } else {
@@ -266,6 +280,15 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         }
     }
 
+    private void removeStatesBefore(HashMap<SimState<STATE>, SimState<STATE>> states, long toFrame) {
+        for (Iterator<SimState<STATE>> iterator = states.values().iterator(); iterator.hasNext(); ) {
+            SimState<STATE> next = iterator.next();
+            if (next.frame < toFrame) {
+                iterator.remove();
+            }
+        }
+    }
+
     private SimState<STATE> getEarliestState(HashMap<SimState<STATE>, SimState<STATE>> states) {
         SimState<STATE> result = null;
         for (SimState<STATE> simState : states.values()) {
@@ -300,7 +323,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             applyInputs(inputs, currentFrame);
             simulation.step();
             currentFrame++;
-            currentFrameStart = System.currentTimeMillis();
+            currentFrameStart = currentFrameStart + frameTime;
             SimState<STATE> simState = new SimState<STATE>(currentFrame, simulation.getFullState());
             states.put(simState, simState);
         }

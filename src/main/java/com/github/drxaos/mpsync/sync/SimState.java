@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class SimState<STATE> implements Serializable {
     public long frame;
     public STATE state;
+    public boolean override;
     public long timestamp;
     public SimState<STATE> prevState = null;
 

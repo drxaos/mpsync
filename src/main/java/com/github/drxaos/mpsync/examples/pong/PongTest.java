@@ -22,7 +22,7 @@ public class PongTest {
 
                     Pong engine = new Pong();
                     ServerSimSync<Board, Keys, Info> sync = new ServerSimSync<Board, Keys, Info>(engine, serverEndpoint);
-                    sync.debug = true;
+                    // sync.debug = true;
                     sync.start();
 
                     PongWindow ui = new PongWindow();
@@ -37,6 +37,8 @@ public class PongTest {
             }
         }.start();
 
+        Thread.sleep(2000);
+
         new Thread() {
             @Override
             public void run() {
@@ -45,7 +47,7 @@ public class PongTest {
 
                     Pong engine = new Pong();
                     ClientSimSync<Board, Keys, Info> sync = new ClientSimSync<Board, Keys, Info>(engine, clientEndpoint);
-                    sync.debug = true;
+                    // sync.debug = true;
                     sync.start();
 
                     PongWindow ui = new PongWindow();
@@ -59,6 +61,8 @@ public class PongTest {
                 }
             }
         }.start();
+
+        Thread.sleep(3000);
 
         new Thread() {
             @Override
