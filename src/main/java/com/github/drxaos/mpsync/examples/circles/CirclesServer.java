@@ -1,12 +1,13 @@
 package com.github.drxaos.mpsync.examples.circles;
 
 import com.github.drxaos.mpsync.bus.impl.SimpleTcpServerEndpoint;
+import com.github.drxaos.mpsync.examples.circles.engine.*;
 import com.github.drxaos.mpsync.examples.circles.ui.MainWindow;
 import com.github.drxaos.mpsync.sync.ServerSimSync;
 
 import java.io.IOException;
 
-public class LaunchServer {
+public class CirclesServer {
 
     public static void main(String[] args) throws IOException {
         SimpleTcpServerEndpoint<State, Click, CirclesInfo> serverEndpoint = new SimpleTcpServerEndpoint<State, Click, CirclesInfo>(5001, new CirclesConverter());

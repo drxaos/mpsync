@@ -18,6 +18,8 @@ public class SimpleTcpClientEndpoint<STATE, INPUT, INFO> implements Bus<STATE, I
 
     Converter<STATE, INPUT, INFO> stateinputConverter;
 
+    public boolean debug = false;
+
     public SimpleTcpClientEndpoint(String host, int port, Converter<STATE, INPUT, INFO> stateinputConverter) {
         this.host = host;
         this.port = port;
@@ -55,5 +57,9 @@ public class SimpleTcpClientEndpoint<STATE, INPUT, INFO> implements Bus<STATE, I
 
     public void onClose(SimpleTcpEndpoint endpoint) {
         simpleTcpEndpoint.shutdown();
+    }
+
+    public boolean isDebugEnabled() {
+        return debug;
     }
 }

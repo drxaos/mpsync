@@ -6,6 +6,8 @@ import com.github.drxaos.mpsync.examples.pong.data.Board;
 import com.github.drxaos.mpsync.examples.pong.data.Info;
 import com.github.drxaos.mpsync.examples.pong.data.Keys;
 import com.github.drxaos.mpsync.examples.pong.data.PongConverter;
+import com.github.drxaos.mpsync.examples.pong.engine.Pong;
+import com.github.drxaos.mpsync.examples.pong.engine.PongWindow;
 import com.github.drxaos.mpsync.sync.ClientSimSync;
 import com.github.drxaos.mpsync.sync.ServerSimSync;
 

@@ -2,7 +2,6 @@ package com.github.drxaos.mpsync.sync;
 
 import com.github.drxaos.mpsync.bus.Bus;
 import com.github.drxaos.mpsync.bus.ServerInfo;
-import com.github.drxaos.mpsync.sim.Simulation;
 
 import java.util.HashMap;
 import java.util.Iterator;

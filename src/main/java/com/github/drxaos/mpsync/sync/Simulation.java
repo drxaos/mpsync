@@ -1,4 +1,4 @@
-package com.github.drxaos.mpsync.sim;
+package com.github.drxaos.mpsync.sync;
 
 import com.github.drxaos.mpsync.bus.ServerInfo;
 import com.github.drxaos.mpsync.sync.SimInput;

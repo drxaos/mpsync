@@ -4,4 +4,6 @@ public interface SocketOwner {
 
     void onClose(SimpleTcpEndpoint endpoint);
 
+    boolean isDebugEnabled();
+
 }

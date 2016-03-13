@@ -22,6 +22,8 @@ public class SimpleTcpServerEndpoint<STATE, INPUT, INFO> implements Bus<STATE, I
 
     List<SimpleTcpEndpoint<STATE, INPUT, INFO>> simpleTcpEndpoints = Collections.synchronizedList(new LinkedList<SimpleTcpEndpoint<STATE, INPUT, INFO>>());
 
+    public boolean debug = false;
+
     public SimpleTcpServerEndpoint(int port, Converter<STATE, INPUT, INFO> stateinputConverter) throws IOException {
         this.port = port;
         this.stateinputConverter = stateinputConverter;
@@ -113,5 +115,9 @@ public class SimpleTcpServerEndpoint<STATE, INPUT, INFO> implements Bus<STATE, I
     public void onClose(SimpleTcpEndpoint endpoint) {
         endpoint.shutdown();
         simpleTcpEndpoints.remove(endpoint);
+    }
+
+    public boolean isDebugEnabled() {
+        return debug;
     }
 }

@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
 
     Socket socket;
+    private SocketOwner owner;
 
     DataOutputStream outToServer;
     BufferedReader inFromServer;
@@ -34,10 +35,8 @@ public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
 
     Integer client;
 
-    public boolean debug = false;
-
     private void debug(String message) {
-        if (debug) {
+        if (owner.isDebugEnabled()) {
             System.out.println(message);
         }
     }
@@ -87,6 +86,7 @@ public class SimpleTcpEndpoint<STATE, INPUT, INFO> {
 
     public void start(Socket socket, final SocketOwner owner) throws IOException {
         this.socket = socket;
+        this.owner = owner;
         outToServer = new DataOutputStream(socket.getOutputStream());
         inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 

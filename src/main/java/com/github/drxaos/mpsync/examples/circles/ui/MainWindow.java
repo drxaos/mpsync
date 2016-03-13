@@ -1,6 +1,6 @@
 package com.github.drxaos.mpsync.examples.circles.ui;
 
-import com.github.drxaos.mpsync.examples.circles.CirclesEngine;
+import com.github.drxaos.mpsync.examples.circles.engine.CirclesEngine;
 import com.github.drxaos.mpsync.examples.circles.sim.Spawn;
 
 import javax.swing.*;

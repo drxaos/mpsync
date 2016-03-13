@@ -1,9 +1,9 @@
-package com.github.drxaos.mpsync.examples.circles;
+package com.github.drxaos.mpsync.examples.circles.engine;
 
 import com.github.drxaos.mpsync.bus.ServerInfo;
 import com.github.drxaos.mpsync.examples.circles.sim.MoveEngine;
 import com.github.drxaos.mpsync.examples.circles.ui.MainWindow;
-import com.github.drxaos.mpsync.sim.Simulation;
+import com.github.drxaos.mpsync.sync.Simulation;
 import com.github.drxaos.mpsync.sync.SimInput;
 
 import java.awt.event.MouseEvent;

@@ -1,6 +1,6 @@
 package com.github.drxaos.mpsync.examples.pong.data;
 
-import com.github.drxaos.mpsync.examples.pong.Player;
+import com.github.drxaos.mpsync.examples.pong.engine.Player;
 
 public class Board {
 

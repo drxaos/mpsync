@@ -1,4 +1,4 @@
-package com.github.drxaos.mpsync.examples.pong;/*
+package com.github.drxaos.mpsync.examples.pong.engine;/*
  *  Copyright (C) 2010  Luca Wehrstedt
  *
  *  This file is released under the GPLv2
@@ -9,7 +9,7 @@ import com.github.drxaos.mpsync.bus.ServerInfo;
 import com.github.drxaos.mpsync.examples.pong.data.Board;
 import com.github.drxaos.mpsync.examples.pong.data.Info;
 import com.github.drxaos.mpsync.examples.pong.data.Keys;
-import com.github.drxaos.mpsync.sim.Simulation;
+import com.github.drxaos.mpsync.sync.Simulation;
 import com.github.drxaos.mpsync.sync.SimInput;
 
 import javax.swing.*;

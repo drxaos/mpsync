@@ -1,4 +1,4 @@
-package com.github.drxaos.mpsync.examples.circles;
+package com.github.drxaos.mpsync.examples.circles.engine;
 
 import com.github.drxaos.mpsync.examples.circles.sim.Spawn;
 

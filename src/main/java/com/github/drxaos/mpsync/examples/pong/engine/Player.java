@@ -1,4 +1,4 @@
-package com.github.drxaos.mpsync.examples.pong;/*
+package com.github.drxaos.mpsync.examples.pong.engine;/*
  *  Copyright (C) 2010  Luca Wehrstedt
  *
  *  This file is released under the GPLv2
