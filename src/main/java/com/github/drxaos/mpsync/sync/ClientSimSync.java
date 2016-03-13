@@ -17,10 +17,11 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
     HashMap<SimInput<INPUT>, SimInput<INPUT>> serverInputs = new HashMap<SimInput<INPUT>, SimInput<INPUT>>();
     ServerInfo<INFO> serverInfo = null;
 
-    int keyFrameInterval = 1000;
-    int keyFrameIntervalTime = 60000;
-    int inputLatencyTime = 0;
-    int clientId = 0;
+    int keyFrameInterval = 1000; // frames between key frames
+    int keyFrameIntervalTime = 60000; // time between key frames
+    int inputLatencyTime = 0; // delay all inputs
+    int latencyCompensation = 0; // frames between server write and client read message
+    int clientId = 0; // server=0
 
     boolean shouldMergeInputs = false;
     long mergeFrom = 0;
@@ -103,11 +104,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
                 serverStates.put(simState, simState);
                 removeStatesBefore(serverStates, simState.frame);
                 removeStatesBefore(states, simState.frame + keyFrameInterval);
-
                 lag = 0;
-                frameTime = keyFrameIntervalTime / keyFrameInterval;
-                applyState(simState);
-
             } else if (hasUnacceptedInputs(inputs) && simState.prevState != null) { // merge previous server state
                 debug("Has unaccepted inputs, merge " + simState.prevState.frame);
                 long actualFrame = currentFrame;
@@ -127,20 +124,21 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             if (lag == 0) {
                 // no lag, correcting current frame
                 applyState(simState);
+                frameTime = keyFrameIntervalTime / (keyFrameInterval + latencyCompensation);
             } else if (Math.abs(lag) > keyFrameInterval) {
                 // reset to current
                 lag = 0;
-                frameTime = keyFrameIntervalTime / keyFrameInterval;
+                frameTime = keyFrameIntervalTime / (keyFrameInterval + latencyCompensation);
 
                 debug("Reset state: " + simState);
                 applyState(simState);
 
             } else {
                 // compensate lag
-                frameTime = keyFrameIntervalTime / (keyFrameInterval + lag);
+                frameTime = keyFrameIntervalTime / (keyFrameInterval + lag + latencyCompensation);
             }
 
-            debug("ADJUST: " + frameTime + "ms * " + keyFrameInterval + " frames + " + lag + " lag");
+            debug("ADJUST: " + frameTime + "ms * " + keyFrameInterval + " frames + " + lag + " lag + " + latencyCompensation + " latencyCompensation");
         }
     }
 
@@ -232,6 +230,8 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         if (input != null) {
             // loading all inputs
             boolean onlyMyInputs = true;
+            int roundTripFrames = 0;
+            int rttCount = 0;
             SimState<STATE> earliestState = getEarliestState(states);
             while (input != null) {
                 if (earliestState != null &&
@@ -249,6 +249,8 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
                     SimInput<INPUT> myInput = inputs.get(input);
                     if (myInput != null) {
                         myInput.accepted = true;
+                        roundTripFrames += (int) (currentFrame - myInput.frame);
+                        rttCount++;
                     } else {
                         inputs.put(input, input);
                     }
@@ -257,6 +259,11 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
                     serverInputs.put(input, input);
                 }
                 input = bus.getInput();
+            }
+
+            if (rttCount > 0) {
+                // synchronize with server
+                latencyCompensation = (latencyCompensation + roundTripFrames) / (rttCount + 1);
             }
 
             if (shouldMergeInputs) {
