@@ -1,5 +1,6 @@
 package com.github.drxaos.mpsync.sim;
 
+import com.github.drxaos.mpsync.bus.ServerInfo;
 import com.github.drxaos.mpsync.sync.SimInput;
 
 public interface Simulation<STATE, INPUT, INFO> {
@@ -16,7 +17,7 @@ public interface Simulation<STATE, INPUT, INFO> {
 
     void input(SimInput<INPUT> simInput);
 
-    void setServerInfo(INFO info);
+    void setServerInfo(ServerInfo<INFO> info);
 
     void lockView();
 

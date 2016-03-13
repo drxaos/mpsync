@@ -14,7 +14,7 @@ public class SimpleTcpClientEndpoint<STATE, INPUT, INFO> implements Bus<STATE, I
     String host;
     int port;
 
-    SimpleTcpEndpoint<STATE, INPUT, INFO> simpleTcpEndpoint;
+    volatile SimpleTcpEndpoint<STATE, INPUT, INFO> simpleTcpEndpoint;
 
     Converter<STATE, INPUT, INFO> stateinputConverter;
 
@@ -45,7 +45,7 @@ public class SimpleTcpClientEndpoint<STATE, INPUT, INFO> implements Bus<STATE, I
     }
 
     public ServerInfo<INFO> getServerInfo() {
-        return simpleTcpEndpoint.getServerInfo();
+        return simpleTcpEndpoint == null ? null : simpleTcpEndpoint.getServerInfo();
     }
 
     public void start() throws IOException {

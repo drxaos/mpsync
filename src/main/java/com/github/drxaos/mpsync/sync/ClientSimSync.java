@@ -170,7 +170,7 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
         keyFrameInterval = serverInfo.keyFrameInterval;
         keyFrameIntervalTime = serverInfo.keyFrameIntervalTime;
         frameTime = keyFrameIntervalTime / keyFrameInterval;
-        simulation.setServerInfo(serverInfo.info);
+        simulation.setServerInfo(serverInfo);
     }
 
     private void cleanOldData() {
@@ -218,7 +218,8 @@ public class ClientSimSync<STATE, INPUT, INFO> extends Thread {
             boolean onlyMyInputs = true;
             SimState<STATE> earliestState = getEarliestState(states);
             while (input != null) {
-                if (input.frame >= earliestState.frame &&
+                if (earliestState != null &&
+                        input.frame >= earliestState.frame &&
                         input.frame < currentFrame &&
                         (!shouldMergeInputs || mergeFrom > input.frame)) {
                     mergeFrom = input.frame;

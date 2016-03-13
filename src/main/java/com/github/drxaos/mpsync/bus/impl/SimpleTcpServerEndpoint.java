@@ -59,18 +59,18 @@ public class SimpleTcpServerEndpoint<STATE, INPUT, INFO> implements Bus<STATE, I
         return null;
     }
 
-    ServerInfo serverInfo;
+    ServerInfo<INFO> serverInfo;
 
-    public void setServerInfo(ServerInfo serverInfo) {
+    public void setServerInfo(ServerInfo<INFO> serverInfo) {
         this.serverInfo = serverInfo;
         for (SimpleTcpEndpoint<STATE, INPUT, INFO> simpleTcpEndpoint : simpleTcpEndpoints) {
-            simpleTcpEndpoint.sendServerInfo(new ServerInfo(serverInfo, simpleTcpEndpoint.client));
+            simpleTcpEndpoint.sendServerInfo(new ServerInfo<INFO>(serverInfo, simpleTcpEndpoint.client));
         }
     }
 
-    public ServerInfo getServerInfo() {
+    public ServerInfo<INFO> getServerInfo() {
         for (SimpleTcpEndpoint<STATE, INPUT, INFO> simpleTcpEndpoint : simpleTcpEndpoints) {
-            ServerInfo serverInfo = simpleTcpEndpoint.getServerInfo();
+            ServerInfo<INFO> serverInfo = simpleTcpEndpoint.getServerInfo();
             if (serverInfo != null) {
                 return serverInfo;
             }
@@ -92,8 +92,14 @@ public class SimpleTcpServerEndpoint<STATE, INPUT, INFO> implements Bus<STATE, I
                         int clientId = clientIdCounter.incrementAndGet();
                         SimpleTcpEndpoint<STATE, INPUT, INFO> endpoint = new SimpleTcpEndpoint<STATE, INPUT, INFO>(stateinputConverter, clientId);
                         endpoint.start(connectionSocket, SimpleTcpServerEndpoint.this);
+                        while (serverInfo == null) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                            }
+                        }
                         simpleTcpEndpoints.add(endpoint);
-                        endpoint.sendServerInfo(new ServerInfo(serverInfo, clientId));
+                        endpoint.sendServerInfo(new ServerInfo<INFO>(serverInfo, clientId));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

@@ -1,5 +1,6 @@
 package com.github.drxaos.mpsync.examples.circles;
 
+import com.github.drxaos.mpsync.bus.ServerInfo;
 import com.github.drxaos.mpsync.examples.circles.sim.MoveEngine;
 import com.github.drxaos.mpsync.examples.circles.ui.MainWindow;
 import com.github.drxaos.mpsync.sim.Simulation;
@@ -77,8 +78,8 @@ public class CirclesEngine implements Simulation<State, Click, CirclesInfo> {
         return new CirclesInfo(moveEngine.getTimeFraction());
     }
 
-    public void setServerInfo(CirclesInfo circlesInfo) {
-        moveEngine.setTimeFraction(circlesInfo.timeFraction);
+    public void setServerInfo(ServerInfo<CirclesInfo> serverInfo) {
+        moveEngine.setTimeFraction(serverInfo.info.timeFraction);
     }
 
     public void input(SimInput<Click> simInput) {
